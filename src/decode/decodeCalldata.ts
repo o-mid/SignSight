@@ -12,7 +12,11 @@ export type DecodeResult = {
 export function decodeErc20Calldata(
   data: string | undefined | null,
 ): DecodeResult {
-  if (data == null || !/^0x[0-9a-fA-F]+$/.test(data)) {
+  if (data == null || data === '' || data === '0x') {
+    return { kind: 'undecoded' };
+  }
+
+  if (!/^0x[0-9a-fA-F]+$/.test(data)) {
     return { kind: 'undecoded' };
   }
 

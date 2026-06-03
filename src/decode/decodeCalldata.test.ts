@@ -16,6 +16,15 @@ describe('decodeErc20Calldata transfer', () => {
   });
 });
 
+describe('decodeErc20Calldata empty data', () => {
+  it('returns undecoded for empty string, 0x, null, and undefined', () => {
+    expect(decodeErc20Calldata('')).toEqual({ kind: 'undecoded' });
+    expect(decodeErc20Calldata('0x')).toEqual({ kind: 'undecoded' });
+    expect(decodeErc20Calldata(null)).toEqual({ kind: 'undecoded' });
+    expect(decodeErc20Calldata(undefined)).toEqual({ kind: 'undecoded' });
+  });
+});
+
 describe('decodeErc20Calldata approve', () => {
   it('decodes approve spender and amount', () => {
     expect(decodeErc20Calldata(APPROVE_1E6)).toEqual({
