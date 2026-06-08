@@ -12,6 +12,24 @@ function rowOf(rows: RiskRow[], code: RiskRow['code']): RiskRow {
   return row;
 }
 
+describe('unknown_spender', () => {
+  it('flags any approve spender against an empty allowlist', () => {
+    const input: RiskInput = {
+      method: 'eth_sendTransaction',
+      chainId: WALLET_CHAIN_ID,
+      decode: {
+        kind: 'approve',
+        spender: SPENDER,
+        amount: 1n,
+      },
+    };
+
+    const row = rowOf(evaluateSigningRisk(input).rows, 'unknown_spender');
+    expect(row.label).toBe('Unknown spender');
+    expect(row.severity).toBe('high');
+  });
+});
+
 describe('infinite_approve', () => {
   it('flags approve of maxUint256 as Unlimited approval', () => {
     const input: RiskInput = {
