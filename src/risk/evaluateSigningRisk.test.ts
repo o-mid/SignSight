@@ -12,6 +12,32 @@ function rowOf(rows: RiskRow[], code: RiskRow['code']): RiskRow {
   return row;
 }
 
+describe('chain_mismatch', () => {
+  it('flags eip155:1 as Different chain', () => {
+    const input: RiskInput = {
+      method: 'eth_sendTransaction',
+      chainId: 'eip155:1',
+      decode: { kind: 'transfer', to: SPENDER, amount: 1n },
+    };
+
+    const row = rowOf(evaluateSigningRisk(input).rows, 'chain_mismatch');
+    expect(row.label).toBe('Different chain');
+    expect(row.severity).toBe('high');
+  });
+
+  it('accepts 11155111 as the wallet chain', () => {
+    const input: RiskInput = {
+      method: 'eth_sendTransaction',
+      chainId: '11155111',
+      decode: { kind: 'transfer', to: SPENDER, amount: 1n },
+    };
+
+    expect(
+      evaluateSigningRisk(input).rows.some((row) => row.code === 'chain_mismatch'),
+    ).toBe(false);
+  });
+});
+
 describe('unknown_spender', () => {
   it('flags any approve spender against an empty allowlist', () => {
     const input: RiskInput = {

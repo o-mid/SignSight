@@ -31,6 +31,10 @@ function riskRow(code: RiskCode): RiskRow {
   };
 }
 
+function normalizeChainId(chainId: string): string {
+  return chainId.includes(':') ? chainId : `eip155:${chainId}`;
+}
+
 export function evaluateSigningRisk(input: RiskInput): RiskResult {
   const rows: RiskRow[] = [];
   const { decode } = input;
@@ -47,6 +51,10 @@ export function evaluateSigningRisk(input: RiskInput): RiskResult {
     )
   ) {
     rows.push(riskRow('unknown_spender'));
+  }
+
+  if (input.chainId !== undefined && normalizeChainId(input.chainId) !== WALLET_CHAIN_ID) {
+    rows.push(riskRow('chain_mismatch'));
   }
 
   return { rows };
