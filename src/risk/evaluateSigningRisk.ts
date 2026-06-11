@@ -57,5 +57,9 @@ export function evaluateSigningRisk(input: RiskInput): RiskResult {
     rows.push(riskRow('chain_mismatch'));
   }
 
+  if (decode.kind === 'undecoded') {
+    rows.push(riskRow('undecoded'));
+  }
+
   return { rows };
 }

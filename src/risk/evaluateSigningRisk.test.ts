@@ -12,6 +12,20 @@ function rowOf(rows: RiskRow[], code: RiskRow['code']): RiskRow {
   return row;
 }
 
+describe('undecoded', () => {
+  it('flags undecoded calldata as Could not decode', () => {
+    const input: RiskInput = {
+      method: 'eth_sendTransaction',
+      chainId: WALLET_CHAIN_ID,
+      decode: { kind: 'undecoded' },
+    };
+
+    const row = rowOf(evaluateSigningRisk(input).rows, 'undecoded');
+    expect(row.label).toBe('Could not decode');
+    expect(row.severity).toBe('high');
+  });
+});
+
 describe('chain_mismatch', () => {
   it('flags eip155:1 as Different chain', () => {
     const input: RiskInput = {
