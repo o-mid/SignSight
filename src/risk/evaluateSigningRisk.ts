@@ -36,6 +36,28 @@ function normalizeChainId(chainId: string): string {
   return chainId.includes(':') ? chainId : `eip155:${chainId}`;
 }
 
+function isPlainUtf8FromHex(hex: string): boolean {
+  const raw = hex.startsWith('0x') || hex.startsWith('0X') ? hex.slice(2) : hex;
+  if (raw.length === 0 || raw.length % 2 !== 0) {
+    return false;
+  }
+  if (!/^[0-9a-fA-F]+$/.test(raw)) {
+    return false;
+  }
+
+  const bytes = new Uint8Array(raw.length / 2);
+  for (let i = 0; i < raw.length; i += 2) {
+    bytes[i / 2] = Number.parseInt(raw.slice(i, i + 2), 16);
+  }
+
+  try {
+    const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+    return text.length > 0 && !text.includes('\uFFFD');
+  } catch {
+    return false;
+  }
+}
+
 export function evaluateSigningRisk(input: RiskInput): RiskResult {
   const rows: RiskRow[] = [];
   const { decode } = input;
@@ -67,6 +89,10 @@ export function evaluateSigningRisk(input: RiskInput): RiskResult {
   }
   if (decode.kind === 'approve' && decode.spender !== undefined && decode.spender.toLowerCase() === ZERO_ADDRESS) {
     rows.push(riskRow('zero_address'));
+  }
+
+  if (input.method === 'personal_sign' && !isPlainUtf8FromHex(input.personalSignHex ?? '')) {
+    rows.push(riskRow('personal_sign_opaque'));
   }
 
   return { rows };

@@ -12,6 +12,34 @@ function rowOf(rows: RiskRow[], code: RiskRow['code']): RiskRow {
   return row;
 }
 
+describe('personal_sign_opaque', () => {
+  it('does not flag plain UTF-8 hex', () => {
+    const input: RiskInput = {
+      method: 'personal_sign',
+      chainId: WALLET_CHAIN_ID,
+      decode: { kind: 'undecoded' },
+      personalSignHex: '0x68656c6c6f',
+    };
+
+    expect(
+      evaluateSigningRisk(input).rows.some((row) => row.code === 'personal_sign_opaque'),
+    ).toBe(false);
+  });
+
+  it('flags invalid UTF-8 as Not plain text', () => {
+    const input: RiskInput = {
+      method: 'personal_sign',
+      chainId: WALLET_CHAIN_ID,
+      decode: { kind: 'undecoded' },
+      personalSignHex: '0xff',
+    };
+
+    const row = rowOf(evaluateSigningRisk(input).rows, 'personal_sign_opaque');
+    expect(row.label).toBe('Not plain text');
+    expect(row.severity).toBe('medium');
+  });
+});
+
 describe('zero_address', () => {
   it('flags a transfer to the zero address', () => {
     const input: RiskInput = {
