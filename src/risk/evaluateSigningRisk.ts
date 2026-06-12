@@ -4,6 +4,7 @@ import type { RiskCode, RiskInput, RiskResult, RiskRow, RiskSeverity } from './t
 export const WALLET_CHAIN_ID = 'eip155:11155111';
 
 const SPENDER_ALLOWLIST: readonly string[] = [];
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 const RISK_LABELS: Record<RiskCode, string> = {
   infinite_approve: 'Unlimited approval',
@@ -59,6 +60,13 @@ export function evaluateSigningRisk(input: RiskInput): RiskResult {
 
   if (decode.kind === 'undecoded') {
     rows.push(riskRow('undecoded'));
+  }
+
+  if (decode.kind === 'transfer' && decode.to !== undefined && decode.to.toLowerCase() === ZERO_ADDRESS) {
+    rows.push(riskRow('zero_address'));
+  }
+  if (decode.kind === 'approve' && decode.spender !== undefined && decode.spender.toLowerCase() === ZERO_ADDRESS) {
+    rows.push(riskRow('zero_address'));
   }
 
   return { rows };

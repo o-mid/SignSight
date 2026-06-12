@@ -12,6 +12,24 @@ function rowOf(rows: RiskRow[], code: RiskRow['code']): RiskRow {
   return row;
 }
 
+describe('zero_address', () => {
+  it('flags a transfer to the zero address', () => {
+    const input: RiskInput = {
+      method: 'eth_sendTransaction',
+      chainId: WALLET_CHAIN_ID,
+      decode: {
+        kind: 'transfer',
+        to: '0x0000000000000000000000000000000000000000',
+        amount: 1n,
+      },
+    };
+
+    const row = rowOf(evaluateSigningRisk(input).rows, 'zero_address');
+    expect(row.label).toBe('Zero address');
+    expect(row.severity).toBe('high');
+  });
+});
+
 describe('undecoded', () => {
   it('flags undecoded calldata as Could not decode', () => {
     const input: RiskInput = {
