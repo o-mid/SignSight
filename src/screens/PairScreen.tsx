@@ -1,17 +1,23 @@
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { pairWithUri } from '../wallet/pairUri';
+import { PairError, pairWithUri } from '../wallet/pairUri';
 
 export default function PairScreen() {
   const [uri, setUri] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function onPair(): Promise<void> {
     setBusy(true);
+    setError(null);
     try {
       await pairWithUri(uri);
-    } catch {
-      // surfaced in a later commit
+    } catch (caught: unknown) {
+      if (caught instanceof PairError) {
+        setError(caught.message);
+      } else {
+        setError('Pairing failed.');
+      }
     } finally {
       setBusy(false);
     }
@@ -29,6 +35,7 @@ export default function PairScreen() {
         autoCapitalize="none"
         autoCorrect={false}
       />
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <Pressable
         style={styles.button}
         onPress={() => {
@@ -61,6 +68,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     fontSize: 16,
+    marginBottom: 12,
+  },
+  error: {
+    color: '#b91c1c',
+    fontSize: 14,
     marginBottom: 12,
   },
   button: {
