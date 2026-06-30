@@ -3,9 +3,11 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { getState, setState, subscribe } from '../state/appState';
 import {
   approveSessionProposal,
+  listActiveSessions,
   rejectSessionProposal,
   type SessionProposal,
 } from '../wallet/sessionActions';
+import { saveSessions, type SessionSnapshot } from '../wallet/sessionStore';
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   if (typeof value !== 'object' || value === null) {
@@ -35,7 +37,15 @@ export default function SessionScreen() {
       return;
     }
     await approveSessionProposal(proposal);
-    setState({ pendingProposal: null });
+    const sessions: SessionSnapshot[] = Object.values(listActiveSessions()).map(
+      (session) => ({
+        topic: session.topic,
+        dappUrl: session.peer.metadata.url ?? '',
+        name: session.peer.metadata.name ?? '',
+      }),
+    );
+    await saveSessions(sessions);
+    setState({ pendingProposal: null, sessions });
   }
 
   async function onReject(): Promise<void> {
