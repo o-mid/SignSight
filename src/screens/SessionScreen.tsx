@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { getState, setState, subscribe } from '../state/appState';
 import {
   approveSessionProposal,
+  disconnectSession,
   listActiveSessions,
   rejectSessionProposal,
   type SessionProposal,
@@ -56,6 +57,17 @@ export default function SessionScreen() {
     setState({ pendingProposal: null });
   }
 
+  async function onDisconnect(): Promise<void> {
+    const topic = snapshot.sessions[0]?.topic;
+    if (!topic) {
+      return;
+    }
+    await disconnectSession(topic);
+    const sessions = snapshot.sessions.filter((row) => row.topic !== topic);
+    await saveSessions(sessions);
+    setState({ sessions });
+  }
+
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>Session</Text>
@@ -75,6 +87,16 @@ export default function SessionScreen() {
       >
         <Text style={styles.buttonText}>Reject</Text>
       </Pressable>
+      {snapshot.sessions[0]?.topic ? (
+        <Pressable
+          style={styles.button}
+          onPress={() => {
+            void onDisconnect();
+          }}
+        >
+          <Text style={styles.buttonText}>Disconnect</Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 }
