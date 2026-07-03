@@ -26,6 +26,12 @@ function isSessionProposal(value: unknown): value is SessionProposal {
   return proposalId(value) !== undefined && asRecord(asRecord(value)?.params) !== undefined;
 }
 
+function dappUrlFromProposal(proposal: unknown): string {
+  const metadata = asRecord(asRecord(asRecord(proposal)?.params)?.proposer)?.metadata;
+  const url = metadata?.url;
+  return typeof url === 'string' ? url : '';
+}
+
 export default function SessionScreen() {
   const [snapshot, setSnapshot] = useState(getState);
 
@@ -71,6 +77,9 @@ export default function SessionScreen() {
   return (
     <View style={styles.wrap}>
       <Text style={styles.title}>Session</Text>
+      <Text style={styles.meta}>
+        {dappUrlFromProposal(proposal) || snapshot.sessions[0]?.dappUrl || ''}
+      </Text>
       <Pressable
         style={styles.button}
         onPress={() => {
@@ -111,6 +120,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#111',
     marginBottom: 12,
+  },
+  meta: {
+    fontSize: 16,
+    color: '#111',
+    marginBottom: 8,
   },
   button: {
     paddingVertical: 12,
