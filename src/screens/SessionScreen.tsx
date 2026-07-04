@@ -4,8 +4,11 @@ import { getState, setState, subscribe } from '../state/appState';
 import {
   approveSessionProposal,
   disconnectSession,
+  formatCountdown,
   listActiveSessions,
+  proposalExpiryMs,
   rejectSessionProposal,
+  type ProposalExpirySource,
   type SessionProposal,
 } from '../wallet/sessionActions';
 import { saveSessions, type SessionSnapshot } from '../wallet/sessionStore';
@@ -26,6 +29,17 @@ function isSessionProposal(value: unknown): value is SessionProposal {
   return proposalId(value) !== undefined && asRecord(asRecord(value)?.params) !== undefined;
 }
 
+function expirySource(proposal: unknown): ProposalExpirySource {
+  const params = asRecord(asRecord(proposal)?.params);
+  return {
+    params: {
+      expiryTimestamp:
+        typeof params?.expiryTimestamp === 'number' ? params.expiryTimestamp : undefined,
+      expiry: typeof params?.expiry === 'number' ? params.expiry : undefined,
+    },
+  };
+}
+
 function dappUrlFromProposal(proposal: unknown): string {
   const metadata = asRecord(asRecord(asRecord(proposal)?.params)?.proposer)?.metadata;
   const url = metadata?.url;
@@ -34,8 +48,18 @@ function dappUrlFromProposal(proposal: unknown): string {
 
 export default function SessionScreen() {
   const [snapshot, setSnapshot] = useState(getState);
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => subscribe(() => setSnapshot(getState())), []);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => {
+      clearInterval(timer);
+    };
+  }, []);
 
   const proposal = snapshot.pendingProposal;
 
@@ -79,6 +103,9 @@ export default function SessionScreen() {
       <Text style={styles.title}>Session</Text>
       <Text style={styles.meta}>
         {dappUrlFromProposal(proposal) || snapshot.sessions[0]?.dappUrl || ''}
+      </Text>
+      <Text style={styles.countdown}>
+        {formatCountdown(proposalExpiryMs(expirySource(proposal)) - now)}
       </Text>
       <Pressable
         style={styles.button}
@@ -125,6 +152,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111',
     marginBottom: 8,
+  },
+  countdown: {
+    fontSize: 20,
+    color: '#111',
+    marginBottom: 24,
   },
   button: {
     paddingVertical: 12,
