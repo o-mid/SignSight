@@ -5,6 +5,7 @@ import {
   approveSessionProposal,
   disconnectSession,
   formatCountdown,
+  isApproveExpired,
   listActiveSessions,
   proposalExpiryMs,
   rejectSessionProposal,
@@ -62,9 +63,11 @@ export default function SessionScreen() {
   }, []);
 
   const proposal = snapshot.pendingProposal;
+  const msLeft = proposalExpiryMs(expirySource(proposal)) - now;
+  const approveExpired = isApproveExpired(msLeft);
 
   async function onApprove(): Promise<void> {
-    if (!isSessionProposal(proposal)) {
+    if (!isSessionProposal(proposal) || approveExpired) {
       return;
     }
     await approveSessionProposal(proposal);
@@ -105,13 +108,14 @@ export default function SessionScreen() {
         {dappUrlFromProposal(proposal) || snapshot.sessions[0]?.dappUrl || ''}
       </Text>
       <Text style={styles.countdown}>
-        {formatCountdown(proposalExpiryMs(expirySource(proposal)) - now)}
+        {formatCountdown(msLeft)}
       </Text>
       <Pressable
-        style={styles.button}
+        style={[styles.button, approveExpired ? styles.buttonDisabled : null]}
         onPress={() => {
           void onApprove();
         }}
+        disabled={approveExpired}
       >
         <Text style={styles.buttonText}>Approve</Text>
       </Pressable>
@@ -160,6 +164,9 @@ const styles = StyleSheet.create({
   },
   button: {
     paddingVertical: 12,
+  },
+  buttonDisabled: {
+    opacity: 0.4,
   },
   buttonText: {
     fontSize: 16,
