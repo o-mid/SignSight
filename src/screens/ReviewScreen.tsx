@@ -1,10 +1,65 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, Text } from 'react-native';
+import { decodeErc20Calldata } from '../decode/decodeCalldata';
+import { hexToUtf8 } from '../wallet/personalSign';
+import { getState, subscribe } from '../state/appState';
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  if (typeof value !== 'object' || value === null) {
+    return undefined;
+  }
+  return value as Record<string, unknown>;
+}
+
+function txData(params: unknown): string | undefined {
+  if (!Array.isArray(params) || params.length === 0) {
+    return undefined;
+  }
+  const tx = asRecord(params[0]);
+  return typeof tx?.data === 'string' ? tx.data : undefined;
+}
+
+function personalSignHex(params: unknown): string | undefined {
+  if (!Array.isArray(params)) {
+    return undefined;
+  }
+  const first = params[0];
+  if (typeof first === 'string' && first.startsWith('0x')) {
+    return first;
+  }
+  const second = params[1];
+  if (typeof second === 'string' && second.startsWith('0x')) {
+    return second;
+  }
+  return undefined;
+}
 
 export default function ReviewScreen() {
+  const [snapshot, setSnapshot] = useState(getState);
+
+  useEffect(() => subscribe(() => setSnapshot(getState())), []);
+
+  const request = snapshot.pendingRequest;
+  const method = request?.method ?? '';
+  const data = request ? txData(request.params) : undefined;
+  const signHex = request ? personalSignHex(request.params) : undefined;
+  const decoded = decodeErc20Calldata(data);
+  const utf8 = signHex ? hexToUtf8(signHex) : null;
+
+  let summary = 'Could not decode';
+  if (decoded.kind === 'transfer') {
+    summary = 'Transfer';
+  } else if (decoded.kind === 'approve') {
+    summary = 'Approve';
+  } else if (method === 'personal_sign' && utf8) {
+    summary = utf8;
+  }
+
   return (
-    <View style={styles.wrap}>
+    <ScrollView style={styles.wrap}>
       <Text style={styles.title}>Review</Text>
-    </View>
+      <Text style={styles.summary}>{summary}</Text>
+    </ScrollView>
   );
 }
 
@@ -17,5 +72,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     color: '#111',
+    marginBottom: 12,
+  },
+  summary: {
+    fontSize: 18,
+    color: '#111',
+    marginBottom: 16,
   },
 });
