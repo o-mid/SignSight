@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
 import { decodeErc20Calldata } from '../decode/decodeCalldata';
+import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
 import { hexToUtf8 } from '../wallet/personalSign';
 import { getState, subscribe } from '../state/appState';
 
@@ -45,6 +46,14 @@ export default function ReviewScreen() {
   const signHex = request ? personalSignHex(request.params) : undefined;
   const decoded = decodeErc20Calldata(data);
   const utf8 = signHex ? hexToUtf8(signHex) : null;
+  const risks = request
+    ? evaluateSigningRisk({
+        method,
+        chainId: request.chainId,
+        decode: decoded,
+        personalSignHex: signHex,
+      }).rows
+    : [];
 
   let summary = 'Could not decode';
   if (decoded.kind === 'transfer') {
@@ -59,6 +68,11 @@ export default function ReviewScreen() {
     <ScrollView style={styles.wrap}>
       <Text style={styles.title}>Review</Text>
       <Text style={styles.summary}>{summary}</Text>
+      {risks.map((row) => (
+        <Text key={row.code} style={styles.risk}>
+          {row.label}
+        </Text>
+      ))}
     </ScrollView>
   );
 }
@@ -78,5 +92,10 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#111',
     marginBottom: 16,
+  },
+  risk: {
+    fontSize: 16,
+    color: '#111',
+    marginBottom: 8,
   },
 });
