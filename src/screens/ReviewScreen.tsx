@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { decodeErc20Calldata } from '../decode/decodeCalldata';
 import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
 import { hexToUtf8 } from '../wallet/personalSign';
-import { getState, subscribe } from '../state/appState';
+import { rejectSessionRequest } from '../wallet/requestActions';
+import { getState, setState, subscribe } from '../state/appState';
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
   if (typeof value !== 'object' || value === null) {
@@ -64,6 +65,14 @@ export default function ReviewScreen() {
     summary = utf8;
   }
 
+  async function onReject(): Promise<void> {
+    if (!request) {
+      return;
+    }
+    await rejectSessionRequest({ topic: request.topic, id: request.id });
+    setState({ pendingRequest: null });
+  }
+
   return (
     <ScrollView style={styles.wrap}>
       <Text style={styles.title}>Review</Text>
@@ -73,6 +82,14 @@ export default function ReviewScreen() {
           {row.label}
         </Text>
       ))}
+      <Pressable
+        style={styles.button}
+        onPress={() => {
+          void onReject();
+        }}
+      >
+        <Text style={styles.buttonText}>Reject</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -97,5 +114,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111',
     marginBottom: 8,
+  },
+  button: {
+    paddingVertical: 12,
+  },
+  buttonText: {
+    fontSize: 16,
+    color: '#111',
   },
 });
