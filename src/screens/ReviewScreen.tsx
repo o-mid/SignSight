@@ -3,7 +3,7 @@ import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { decodeErc20Calldata } from '../decode/decodeCalldata';
 import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
 import { hexToUtf8 } from '../wallet/personalSign';
-import { rejectSessionRequest } from '../wallet/requestActions';
+import { completeDryRun, rejectSessionRequest } from '../wallet/requestActions';
 import { getState, setState, subscribe } from '../state/appState';
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -73,6 +73,14 @@ export default function ReviewScreen() {
     setState({ pendingRequest: null });
   }
 
+  async function onDryRun(): Promise<void> {
+    if (!request) {
+      return;
+    }
+    await completeDryRun({ topic: request.topic, id: request.id });
+    setState({ pendingRequest: null });
+  }
+
   return (
     <ScrollView style={styles.wrap}>
       <Text style={styles.title}>Review</Text>
@@ -89,6 +97,14 @@ export default function ReviewScreen() {
         }}
       >
         <Text style={styles.buttonText}>Reject</Text>
+      </Pressable>
+      <Pressable
+        style={styles.button}
+        onPress={() => {
+          void onDryRun();
+        }}
+      >
+        <Text style={styles.buttonText}>Dry-run</Text>
       </Pressable>
     </ScrollView>
   );
