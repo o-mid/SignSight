@@ -4,6 +4,7 @@ import { decodeErc20Calldata } from '../decode/decodeCalldata';
 import { reviewTitle } from '../decode/reviewLabel';
 import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
 import { hexToUtf8 } from '../wallet/personalSign';
+import { appendHistory } from '../wallet/historyStore';
 import { completeDryRun, rejectSessionRequest } from '../wallet/requestActions';
 import { getState, setState, subscribe } from '../state/appState';
 
@@ -71,7 +72,17 @@ export default function ReviewScreen() {
       return;
     }
     await rejectSessionRequest({ topic: request.topic, id: request.id });
-    setState({ pendingRequest: null });
+    const row = {
+      id: String(request.id),
+      at: Date.now(),
+      method,
+      dappUrl: request.dappUrl,
+      summary,
+      risks: risks.map((item) => item.label),
+      outcome: 'rejected' as const,
+    };
+    await appendHistory(row);
+    setState({ pendingRequest: null, history: [...getState().history, row] });
   }
 
   async function onDryRun(): Promise<void> {
@@ -79,7 +90,17 @@ export default function ReviewScreen() {
       return;
     }
     await completeDryRun({ topic: request.topic, id: request.id });
-    setState({ pendingRequest: null });
+    const row = {
+      id: String(request.id),
+      at: Date.now(),
+      method,
+      dappUrl: request.dappUrl,
+      summary,
+      risks: risks.map((item) => item.label),
+      outcome: 'dry-run' as const,
+    };
+    await appendHistory(row);
+    setState({ pendingRequest: null, history: [...getState().history, row] });
   }
 
   return (
