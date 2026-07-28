@@ -43,6 +43,7 @@ function personalSignHex(params: unknown): string | undefined {
 
 export default function ReviewScreen() {
   const [snapshot, setSnapshot] = useState(getState);
+  const [showHex, setShowHex] = useState(false);
 
   useEffect(() => subscribe(() => setSnapshot(getState())), []);
 
@@ -115,6 +116,15 @@ export default function ReviewScreen() {
       <Pressable
         style={styles.button}
         onPress={() => {
+          setShowHex((current) => !current);
+        }}
+      >
+        <Text style={styles.buttonText}>Raw hex</Text>
+      </Pressable>
+      {showHex ? <Text style={styles.hex}>{data ?? signHex ?? ''}</Text> : null}
+      <Pressable
+        style={styles.button}
+        onPress={() => {
           void onReject();
         }}
       >
@@ -152,6 +162,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111',
     marginBottom: 8,
+  },
+  hex: {
+    fontSize: 12,
+    color: '#333',
+    marginBottom: 12,
   },
   button: {
     paddingVertical: 12,
