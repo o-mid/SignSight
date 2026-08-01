@@ -6,7 +6,11 @@ import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
 import { hexToUtf8 } from '../wallet/personalSign';
 import { isMalformedSiwe, type SiweFields } from '../wallet/siwe';
 import { appendHistory } from '../wallet/historyStore';
-import { completeDryRun, rejectSessionRequest } from '../wallet/requestActions';
+import {
+  completeDryRun,
+  rejectMalformedSiwe,
+  rejectSessionRequest,
+} from '../wallet/requestActions';
 import { getState, setState, subscribe } from '../state/appState';
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -48,6 +52,12 @@ export default function ReviewScreen() {
 
   useEffect(() => subscribe(() => setSnapshot(getState())), []);
 
+  useEffect(() => {
+    if (auth && isMalformedSiwe(siweFields)) {
+      void rejectMalformedSiwe(auth.id);
+    }
+  }, [auth, siweFields]);
+
   const request = snapshot.pendingRequest;
   const auth = snapshot.pendingAuth;
   const siweFields = (auth?.fields ?? {}) as SiweFields;
@@ -82,6 +92,21 @@ export default function ReviewScreen() {
   }
 
   async function onReject(): Promise<void> {
+    if (auth && isMalformedSiwe(siweFields)) {
+      await rejectMalformedSiwe(auth.id);
+      const row = {
+        id: String(auth.id),
+        at: Date.now(),
+        method: 'session_authenticate',
+        dappUrl: auth.dappUrl,
+        summary: 'Malformed SIWE.',
+        risks: [],
+        outcome: 'malformed' as const,
+      };
+      await appendHistory(row);
+      setState({ pendingAuth: null, history: [...getState().history, row] });
+      return;
+    }
     if (!request) {
       return;
     }
