@@ -14,25 +14,25 @@ import {
 } from '../wallet/requestActions';
 import { getState, setState, subscribe } from '../state/appState';
 
-function asRecord(value: unknown): Record<string, unknown> | undefined {
+function objectRecord(value: unknown): Record<string, unknown> | undefined {
   if (typeof value !== 'object' || value === null) {
     return undefined;
   }
   return value as Record<string, unknown>;
 }
 
-function txFields(params: unknown): { data?: string; to?: string } {
+function transactionFields(params: unknown): { data?: string; to?: string } {
   if (!Array.isArray(params) || params.length === 0) {
     return {};
   }
-  const tx = asRecord(params[0]);
+  const tx = objectRecord(params[0]);
   return {
     data: typeof tx?.data === 'string' ? tx.data : undefined,
     to: typeof tx?.to === 'string' ? tx.to : undefined,
   };
 }
 
-function personalSignHex(params: unknown): string | undefined {
+function signPayloadHex(params: unknown): string | undefined {
   if (!Array.isArray(params)) {
     return undefined;
   }
@@ -74,9 +74,9 @@ export default function ReviewScreen() {
     'expiration',
   ];
   const method = request?.method ?? '';
-  const tx = request ? txFields(request.params) : {};
+  const tx = request ? transactionFields(request.params) : {};
   const data = tx.data;
-  const signHex = request ? personalSignHex(request.params) : undefined;
+  const signHex = request ? signPayloadHex(request.params) : undefined;
   const decoded = decodeErc20Calldata(data);
   const utf8 = signHex ? hexToUtf8(signHex) : null;
   const risks = request
