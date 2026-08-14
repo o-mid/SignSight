@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootStack from './src/navigation/RootStack';
+import { walletConnectProjectId } from './src/app/env';
 import { initWalletKit, getWalletKit } from './src/wallet/walletKit';
 import { listenSessionProposals } from './src/wallet/sessionActions';
 import {
@@ -10,7 +11,7 @@ import {
 
 function App() {
   useEffect(() => {
-    const projectId = process.env.WALLETCONNECT_PROJECT_ID ?? '';
+    const projectId = walletConnectProjectId();
     if (projectId.length === 0) {
       return;
     }
