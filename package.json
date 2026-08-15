@@ -15,7 +15,8 @@
     "react": "19.1.0",
     "react-native": "0.80.0",
     "react-native-safe-area-context": "5.5.2",
-    "react-native-screens": "4.13.1"
+    "react-native-screens": "4.13.1",
+    "viem": "2.31.7"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
