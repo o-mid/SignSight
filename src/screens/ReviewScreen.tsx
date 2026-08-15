@@ -4,6 +4,7 @@ import { decodeErc20Calldata } from '../decode/decodeCalldata';
 import { reviewTitle } from '../decode/reviewLabel';
 import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
 import { hexToUtf8 } from '../wallet/personalSign';
+import { appendHistory } from '../wallet/historyStore';
 import { completeDryRun, rejectSessionRequest } from '../wallet/requestActions';
 import { getState, setState, subscribe } from '../state/appState';
 
@@ -42,6 +43,7 @@ function personalSignHex(params: unknown): string | undefined {
 
 export default function ReviewScreen() {
   const [snapshot, setSnapshot] = useState(getState);
+  const [showHex, setShowHex] = useState(false);
 
   useEffect(() => subscribe(() => setSnapshot(getState())), []);
 
@@ -71,7 +73,17 @@ export default function ReviewScreen() {
       return;
     }
     await rejectSessionRequest({ topic: request.topic, id: request.id });
-    setState({ pendingRequest: null });
+    const row = {
+      id: String(request.id),
+      at: Date.now(),
+      method,
+      dappUrl: request.dappUrl,
+      summary,
+      risks: risks.map((item) => item.label),
+      outcome: 'rejected' as const,
+    };
+    await appendHistory(row);
+    setState({ pendingRequest: null, history: [...getState().history, row] });
   }
 
   async function onDryRun(): Promise<void> {
@@ -79,7 +91,17 @@ export default function ReviewScreen() {
       return;
     }
     await completeDryRun({ topic: request.topic, id: request.id });
-    setState({ pendingRequest: null });
+    const row = {
+      id: String(request.id),
+      at: Date.now(),
+      method,
+      dappUrl: request.dappUrl,
+      summary,
+      risks: risks.map((item) => item.label),
+      outcome: 'dry-run' as const,
+    };
+    await appendHistory(row);
+    setState({ pendingRequest: null, history: [...getState().history, row] });
   }
 
   return (
@@ -91,6 +113,15 @@ export default function ReviewScreen() {
           {row.label}
         </Text>
       ))}
+      <Pressable
+        style={styles.button}
+        onPress={() => {
+          setShowHex((current) => !current);
+        }}
+      >
+        <Text style={styles.buttonText}>Raw hex</Text>
+      </Pressable>
+      {showHex ? <Text style={styles.hex}>{data ?? signHex ?? ''}</Text> : null}
       <Pressable
         style={styles.button}
         onPress={() => {
@@ -131,6 +162,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#111',
     marginBottom: 8,
+  },
+  hex: {
+    fontSize: 12,
+    color: '#333',
+    marginBottom: 12,
   },
   button: {
     paddingVertical: 12,

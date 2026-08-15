@@ -1,3 +1,4 @@
+import type { HistoryRow } from '../wallet/historyStore';
 import type { SessionSnapshot } from '../wallet/sessionStore';
 
 export type AppState = {
@@ -17,15 +18,7 @@ export type AppState = {
     fields: Record<string, string | undefined>;
     dappUrl: string;
   } | null;
-  history: {
-    id: string;
-    at: string;
-    method: string;
-    dappUrl: string;
-    summary: string;
-    risks: string[];
-    outcome: 'rejected' | 'dry-run' | 'malformed';
-  }[];
+  history: HistoryRow[];
   pendingCount: number;
 };
 

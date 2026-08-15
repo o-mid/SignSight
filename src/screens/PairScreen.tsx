@@ -1,11 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootStack';
 import { PairError, pairWithUri } from '../wallet/pairUri';
 
-export default function PairScreen() {
-  const [uri, setUri] = useState('');
+type Props = NativeStackScreenProps<RootStackParamList, 'Pair'>;
+
+export default function PairScreen({ navigation, route }: Props) {
+  const [uri, setUri] = useState(route.params?.uri ?? '');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (route.params?.uri) {
+      setUri(route.params.uri);
+    }
+  }, [route.params?.uri]);
 
   async function onPair(): Promise<void> {
     setBusy(true);
@@ -44,6 +54,9 @@ export default function PairScreen() {
         disabled={busy}
       >
         <Text style={styles.buttonText}>Pair</Text>
+      </Pressable>
+      <Pressable style={styles.button} onPress={() => navigation.navigate('Scan')}>
+        <Text style={styles.buttonText}>Scan QR</Text>
       </Pressable>
     </View>
   );
