@@ -19,6 +19,7 @@ export type AppState = {
     dappUrl: string;
   } | null;
   history: HistoryRow[];
+  demoSignerEnabled: boolean;
   pendingCount: number;
 };
 
@@ -46,6 +47,7 @@ let state: AppState = {
   pendingRequest: null,
   pendingAuth: null,
   history: [],
+  demoSignerEnabled: false,
   pendingCount: 0,
 };
 

@@ -26,4 +26,16 @@ describe('explainRequest', () => {
     const result = await explainRequest(input, fake);
     expect(result.summary).toBe('Could not explain');
   });
+
+  it('drops a safe line on unlimited permit', async () => {
+    const permit: ExplainInput = {
+      decode: { kind: 'undecoded' },
+      risks: [{ code: 'permit_infinite', label: 'Unlimited permit', severity: 'high' }],
+      method: 'eth_signTypedData_v4',
+      dappUrl: 'https://example.invalid',
+    };
+    const fake: Explainer = async () => ({ summary: 'This is safe' });
+    const result = await explainRequest(permit, fake);
+    expect(result.summary).toBe('Could not explain');
+  });
 });

@@ -1,7 +1,7 @@
 import { NavigationContainer, DefaultTheme, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StatusBar, StyleSheet, Text } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import PairScreen from '../screens/PairScreen';
 import ScanScreen from '../screens/ScanScreen';
@@ -53,6 +53,7 @@ const navTheme = {
 export default function RootStack() {
   return (
     <NavigationContainer theme={navTheme}>
+      <StatusBar barStyle="dark-content" backgroundColor={color.bg} />
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={{
@@ -62,9 +63,13 @@ export default function RootStack() {
           headerStyle: { backgroundColor: color.bg },
           headerTitleStyle: { ...type.callout, fontWeight: '600' },
           contentStyle: { backgroundColor: color.bg },
+          animation: 'fade_from_bottom',
+          animationDuration: 280,
+          gestureEnabled: true,
+          fullScreenGestureEnabled: true,
         }}
       >
-        <Stack.Screen name="Home" component={HomeScreen} options={{ title: 'SignSight' }} />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ headerShown: false }} />
         <Stack.Screen name="Pair" component={PairScreen} options={{ title: 'Pair' }} />
         <Stack.Screen name="History" component={HistoryScreen} options={{ title: 'History' }} />
         <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
@@ -73,7 +78,8 @@ export default function RootStack() {
             presentation: 'formSheet',
             sheetGrabberVisible: true,
             sheetAllowedDetents: [0.78, 1],
-            sheetCornerRadius: 16,
+            sheetCornerRadius: 24,
+            animation: 'slide_from_bottom',
           }}
         >
           <Stack.Screen name="Session" component={SessionScreen} options={{ title: 'Session' }} />
@@ -84,6 +90,7 @@ export default function RootStack() {
           component={ScanScreen}
           options={{
             presentation: 'fullScreenModal',
+            animation: 'fade',
             title: 'Scan',
             headerLeft: ScanCancel,
           }}
@@ -100,6 +107,7 @@ const styles = StyleSheet.create({
   },
   cancel: {
     ...type.callout,
+    fontWeight: '600',
     color: color.ink,
   },
 });

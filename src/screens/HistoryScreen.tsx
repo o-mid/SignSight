@@ -3,6 +3,7 @@ import { loadHistory } from '../wallet/historyStore';
 import { getState, setState, subscribe } from '../state/appState';
 import { EmptyState } from '../ui/EmptyState';
 import { ListGroup, ListRow } from '../ui/ListRow';
+import { FadeIn } from '../ui/motion';
 import { Screen } from '../ui/Screen';
 
 function outcomeLabel(outcome: string): string {
@@ -11,6 +12,9 @@ function outcomeLabel(outcome: string): string {
   }
   if (outcome === 'malformed') {
     return 'Malformed';
+  }
+  if (outcome === 'demo-sign') {
+    return 'Demo sign';
   }
   return 'Rejected';
 }
@@ -29,21 +33,26 @@ export default function HistoryScreen() {
   return (
     <Screen scroll>
       {snapshot.history.length === 0 ? (
-        <EmptyState
-          title="No reviews yet"
-          body="Rejected and dry-run requests appear here after you decide."
-        />
+        <FadeIn>
+          <EmptyState
+            mark
+            title="No reviews yet"
+            body="Rejected and dry-run requests land here after you decide. Nothing leaves the phone."
+          />
+        </FadeIn>
       ) : (
-        <ListGroup>
-          {snapshot.history.map(row => (
-            <ListRow
-              key={row.id}
-              title={row.summary}
-              subtitle={[row.method, row.dappUrl].filter(Boolean).join(' · ')}
-              accessory={outcomeLabel(row.outcome)}
-            />
-          ))}
-        </ListGroup>
+        <FadeIn>
+          <ListGroup>
+            {snapshot.history.map(row => (
+              <ListRow
+                key={row.id}
+                title={row.summary}
+                subtitle={[row.method, row.dappUrl].filter(Boolean).join(' · ')}
+                accessory={outcomeLabel(row.outcome)}
+              />
+            ))}
+          </ListGroup>
+        </FadeIn>
       )}
     </Screen>
   );

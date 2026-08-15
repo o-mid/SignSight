@@ -1,4 +1,5 @@
-import { ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { PressScale } from './motion';
 import { color, hit, radius, space, type } from './theme';
 
 export type ButtonRole = 'primary' | 'secondary' | 'destructive' | 'ghost';
@@ -22,35 +23,29 @@ export function Button({
 }: Props) {
   const idle = disabled || loading;
   return (
-    <Pressable
-      accessibilityRole="button"
+    <PressScale
       accessibilityLabel={label}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled: Boolean(idle), busy: Boolean(loading) }}
       disabled={idle}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        styles[role],
-        idle ? styles.idle : null,
-        pressed && !idle ? styles.pressed : null,
-      ]}
     >
-      {loading ? (
-        <ActivityIndicator
-          color={role === 'primary' ? color.onPrimary : color.ink}
-          size="small"
-        />
-      ) : (
-        <Text style={[styles.label, labelStyle[role]]}>{label}</Text>
-      )}
-    </Pressable>
+      <View style={[styles.base, styles[role], idle ? styles.idle : null]}>
+        {loading ? (
+          <ActivityIndicator
+            color={role === 'primary' ? color.onPrimary : color.ink}
+            size="small"
+          />
+        ) : (
+          <Text style={[styles.label, labelStyle[role]]}>{label}</Text>
+        )}
+      </View>
+    </PressScale>
   );
 }
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: hit,
+    minHeight: 52,
     borderRadius: radius,
     paddingHorizontal: space[2],
     alignItems: 'center',
@@ -69,12 +64,10 @@ const styles = StyleSheet.create({
   },
   ghost: {
     backgroundColor: 'transparent',
+    minHeight: hit,
   },
   idle: {
     opacity: 0.38,
-  },
-  pressed: {
-    opacity: 0.72,
   },
   label: {
     ...type.callout,

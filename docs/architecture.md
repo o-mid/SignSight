@@ -17,6 +17,6 @@ flowchart LR
 ```
 
 - Wallet side: `@reown/walletkit` + `@walletconnect/react-native-compat` (compat import is first in `index.js`).
-- One chain: Sepolia. Methods: `eth_sendTransaction`, `personal_sign`, `session_authenticate`.
-- Decode is viem `decodeFunctionData` on transfer/approve.
+- One chain: Sepolia. Methods: `eth_sendTransaction`, `personal_sign`, `eth_signTypedData_v4`, `session_authenticate`.
+- Decode is viem `decodeFunctionData` on transfer/approve/increaseAllowance/decreaseAllowance, plus EIP-712 Permit.
 - Risk rules are local functions. The explainer is optional copy.

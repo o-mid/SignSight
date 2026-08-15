@@ -1,4 +1,6 @@
+import { encodeFunctionData } from 'viem';
 import { decodeErc20Calldata } from './decodeCalldata';
+import { erc20Abi } from './erc20Abi';
 
 const TRANSFER_1E6 =
   '0xa9059cbb000000000000000000000000111111111111111111111111111111111111111100000000000000000000000000000000000000000000000000000000000f4240';
@@ -22,6 +24,32 @@ describe('decodeErc20Calldata empty data', () => {
     expect(decodeErc20Calldata('0x')).toEqual({ kind: 'undecoded' });
     expect(decodeErc20Calldata(null)).toEqual({ kind: 'undecoded' });
     expect(decodeErc20Calldata(undefined)).toEqual({ kind: 'undecoded' });
+  });
+});
+
+describe('decodeErc20Calldata allowance', () => {
+  it('decodes increaseAllowance and decreaseAllowance', () => {
+    const spender = '0x2222222222222222222222222222222222222222';
+    const increase = encodeFunctionData({
+      abi: erc20Abi,
+      functionName: 'increaseAllowance',
+      args: [spender, 1_000_000n],
+    });
+    const decrease = encodeFunctionData({
+      abi: erc20Abi,
+      functionName: 'decreaseAllowance',
+      args: [spender, 5n],
+    });
+    expect(decodeErc20Calldata(increase)).toEqual({
+      kind: 'increase_allowance',
+      spender,
+      amount: 1_000_000n,
+    });
+    expect(decodeErc20Calldata(decrease)).toEqual({
+      kind: 'decrease_allowance',
+      spender,
+      amount: 5n,
+    });
   });
 });
 

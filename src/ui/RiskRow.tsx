@@ -1,6 +1,6 @@
 import { StyleSheet, Text, View } from 'react-native';
 import type { RiskSeverity } from '../risk/types';
-import { color, radius, space, type } from './theme';
+import { color, radiusSm, space, type } from './theme';
 
 type Props = {
   label: string;
@@ -15,6 +15,7 @@ export function RiskRow({ label, severity }: Props) {
       accessibilityLabel={`${high ? 'High' : 'Medium'} risk. ${label}`}
       style={[styles.row, high ? styles.high : styles.medium]}
     >
+      <View style={[styles.pip, high ? styles.pipHigh : styles.pipMedium]} />
       <Text style={[styles.label, high ? styles.highLabel : styles.mediumLabel]}>{label}</Text>
     </View>
   );
@@ -22,9 +23,12 @@ export function RiskRow({ label, severity }: Props) {
 
 const styles = StyleSheet.create({
   row: {
-    borderRadius: radius,
+    borderRadius: radiusSm,
     paddingHorizontal: space[2],
-    paddingVertical: space[1],
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[1],
   },
   high: {
     backgroundColor: color.dangerBg,
@@ -32,9 +36,21 @@ const styles = StyleSheet.create({
   medium: {
     backgroundColor: color.warningBg,
   },
+  pip: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  pipHigh: {
+    backgroundColor: color.danger,
+  },
+  pipMedium: {
+    backgroundColor: color.warning,
+  },
   label: {
     ...type.callout,
     fontWeight: '600',
+    flex: 1,
   },
   highLabel: {
     color: color.danger,
