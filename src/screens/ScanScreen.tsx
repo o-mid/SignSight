@@ -3,9 +3,10 @@ import { StyleSheet, Text, View } from 'react-native';
 import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootStack';
-import { Button } from '../ui/Button';
+import { FadeIn } from '../ui/motion';
 import { Screen } from '../ui/Screen';
 import { color, space, type } from '../ui/theme';
+import { Viewfinder } from '../ui/Viewfinder';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Scan'>;
 
@@ -24,12 +25,12 @@ export default function ScanScreen({ navigation }: Props) {
 
   if (device == null) {
     return (
-      <Screen
-        footer={
-          <Button role="secondary" label="Close" onPress={() => navigation.goBack()} />
-        }
-      >
-        <Text style={styles.meta}>No camera available on this device.</Text>
+      <Screen>
+        <FadeIn style={styles.empty}>
+          <Viewfinder />
+          <Text style={styles.title}>No camera on this device</Text>
+          <Text style={styles.body}>Cancel and paste a wc: URI on Pair instead.</Text>
+        </FadeIn>
       </Screen>
     );
   }
@@ -46,11 +47,30 @@ export default function ScanScreen({ navigation }: Props) {
           setError(event.message);
         }}
       />
+      <View style={styles.overlay} pointerEvents="none">
+        <Viewfinder />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  empty: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: space[2],
+    paddingBottom: space[5],
+  },
+  title: {
+    ...type.headline,
+    textAlign: 'center',
+  },
+  body: {
+    ...type.subhead,
+    textAlign: 'center',
+    maxWidth: 280,
+  },
   wrap: {
     flex: 1,
     backgroundColor: color.ink,
@@ -58,8 +78,10 @@ const styles = StyleSheet.create({
   camera: {
     flex: 1,
   },
-  meta: {
-    ...type.body,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   error: {
     ...type.footnote,

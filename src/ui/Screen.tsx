@@ -7,21 +7,35 @@ type Props = {
   children: ReactNode;
   scroll?: boolean;
   footer?: ReactNode;
+  padTop?: boolean;
 };
 
-export function Screen({ children, scroll, footer }: Props) {
+export function Screen({ children, scroll, footer, padTop }: Props) {
   const insets = useSafeAreaInsets();
   const bottom = Math.max(insets.bottom, space[2]);
+  const top = padTop ? Math.max(insets.top, space[2]) : space[2];
   const body = scroll ? (
     <ScrollView
       style={styles.flex}
-      contentContainerStyle={[styles.content, footer ? null : { paddingBottom: bottom }]}
+      contentContainerStyle={[
+        styles.content,
+        { paddingTop: top },
+        footer ? null : { paddingBottom: bottom },
+      ]}
       keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
     >
       {children}
     </ScrollView>
   ) : (
-    <View style={[styles.flex, styles.content, footer ? null : { paddingBottom: bottom }]}>
+    <View
+      style={[
+        styles.flex,
+        styles.content,
+        { paddingTop: top },
+        footer ? null : { paddingBottom: bottom },
+      ]}
+    >
       {children}
     </View>
   );
@@ -44,15 +58,12 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: space[3],
-    paddingTop: space[2],
-    gap: space[2],
+    gap: space[3],
   },
   footer: {
     paddingHorizontal: space[3],
-    paddingTop: space[1],
+    paddingTop: space[2],
     gap: space[1],
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: color.line,
     backgroundColor: color.bg,
   },
 });

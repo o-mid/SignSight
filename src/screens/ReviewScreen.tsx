@@ -18,9 +18,10 @@ import {
 } from '../wallet/requestActions';
 import { getState, setState, subscribe } from '../state/appState';
 import { Button } from '../ui/Button';
+import { FadeIn } from '../ui/motion';
 import { RiskRow } from '../ui/RiskRow';
 import { Screen } from '../ui/Screen';
-import { type } from '../ui/theme';
+import { color, lift, radius, space, type } from '../ui/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Review'>;
 
@@ -257,39 +258,50 @@ export default function ReviewScreen({ navigation }: Props) {
         </>
       }
     >
-      <Text style={styles.summary}>{summary}</Text>
-      {request?.dappUrl || auth?.dappUrl ? (
-        <Text style={styles.meta}>{request?.dappUrl ?? auth?.dappUrl}</Text>
-      ) : null}
-      {auth ? (
-        <View style={styles.stack}>
-          {siweKeys.map(key =>
-            siweFields[key] ? (
-              <Text key={key} style={styles.meta}>
-                {SIWE_LABELS[key]}: {siweFields[key]}
-              </Text>
-            ) : null,
-          )}
+      <FadeIn>
+        <View style={styles.card}>
+          <Text style={styles.kicker}>Request</Text>
+          <Text style={styles.summary}>{summary}</Text>
+          {request?.dappUrl || auth?.dappUrl ? (
+            <Text style={styles.meta}>{request?.dappUrl ?? auth?.dappUrl}</Text>
+          ) : null}
         </View>
+      </FadeIn>
+      {auth ? (
+        <FadeIn delay={60}>
+          <View style={styles.card}>
+            {siweKeys.map(key =>
+              siweFields[key] ? (
+                <Text key={key} style={styles.meta}>
+                  {SIWE_LABELS[key]}: {siweFields[key]}
+                </Text>
+              ) : null,
+            )}
+          </View>
+        </FadeIn>
       ) : null}
       {typed ? (
-        <View style={styles.stack}>
-          {typed.name ? <Text style={styles.meta}>Name: {typed.name}</Text> : null}
-          {typed.verifyingContract ? (
-            <Text style={styles.meta}>Verifying contract: {typed.verifyingContract}</Text>
-          ) : null}
-          {typed.chainId ? <Text style={styles.meta}>Chain: {typed.chainId}</Text> : null}
-          {typed.primaryType ? (
-            <Text style={styles.meta}>Primary type: {typed.primaryType}</Text>
-          ) : null}
-        </View>
+        <FadeIn delay={60}>
+          <View style={styles.card}>
+            {typed.name ? <Text style={styles.meta}>Name: {typed.name}</Text> : null}
+            {typed.verifyingContract ? (
+              <Text style={styles.meta}>Verifying contract: {typed.verifyingContract}</Text>
+            ) : null}
+            {typed.chainId ? <Text style={styles.meta}>Chain: {typed.chainId}</Text> : null}
+            {typed.primaryType ? (
+              <Text style={styles.meta}>Primary type: {typed.primaryType}</Text>
+            ) : null}
+          </View>
+        </FadeIn>
       ) : null}
       {risks.length > 0 ? (
-        <View style={styles.stack}>
-          {risks.map(row => (
-            <RiskRow key={row.code} label={row.label} severity={row.severity} />
-          ))}
-        </View>
+        <FadeIn delay={100}>
+          <View style={styles.stack}>
+            {risks.map(row => (
+              <RiskRow key={row.code} label={row.label} severity={row.severity} />
+            ))}
+          </View>
+        </FadeIn>
       ) : null}
       <Button
         role="ghost"
@@ -318,6 +330,19 @@ export default function ReviewScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  card: {
+    backgroundColor: color.surface,
+    borderRadius: radius,
+    padding: space[3],
+    gap: 8,
+    ...lift,
+  },
+  kicker: {
+    ...type.footnote,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
   summary: {
     ...type.headline,
   },

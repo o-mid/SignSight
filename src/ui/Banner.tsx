@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { FadeIn, PressScale } from './motion';
 import { color, hit, radius, space, type } from './theme';
 
 type Props = {
@@ -9,16 +10,18 @@ type Props = {
 
 export function Banner({ title, body, onPress }: Props) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={title}
-      accessibilityHint={body}
-      onPress={onPress}
-      style={({ pressed }) => [styles.wrap, pressed ? styles.pressed : null]}
-    >
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.body}>{body}</Text>
-    </Pressable>
+    <FadeIn>
+      <PressScale accessibilityLabel={title} accessibilityHint={body} onPress={onPress}>
+        <View style={styles.wrap}>
+          <View style={styles.dot} />
+          <View style={styles.copy}>
+            <Text style={styles.title}>{title}</Text>
+            <Text style={styles.body}>{body}</Text>
+          </View>
+          <Text style={styles.chevron}>›</Text>
+        </View>
+      </PressScale>
+    </FadeIn>
   );
 }
 
@@ -29,10 +32,19 @@ const styles = StyleSheet.create({
     borderRadius: radius,
     paddingHorizontal: space[2],
     paddingVertical: space[2],
-    gap: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[2],
   },
-  pressed: {
-    opacity: 0.72,
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: color.warning,
+  },
+  copy: {
+    flex: 1,
+    gap: 4,
   },
   title: {
     ...type.callout,
@@ -41,6 +53,11 @@ const styles = StyleSheet.create({
   },
   body: {
     ...type.footnote,
+    color: color.warning,
+  },
+  chevron: {
+    fontSize: 22,
+    lineHeight: 24,
     color: color.warning,
   },
 });

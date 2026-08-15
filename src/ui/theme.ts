@@ -17,37 +17,47 @@ export const space = {
   2: 16,
   3: 24,
   4: 32,
+  5: 40,
 } as const;
 
 export const type = {
+  display: {
+    fontSize: 34,
+    fontWeight: '600' as const,
+    lineHeight: 40,
+    letterSpacing: -0.6,
+    color: color.ink,
+  },
   title: {
     fontSize: 28,
     fontWeight: '600' as const,
     lineHeight: 34,
+    letterSpacing: -0.4,
     color: color.ink,
   },
   headline: {
     fontSize: 22,
     fontWeight: '600' as const,
     lineHeight: 28,
+    letterSpacing: -0.3,
     color: color.ink,
   },
   body: {
     fontSize: 17,
     fontWeight: '400' as const,
-    lineHeight: 22,
+    lineHeight: 24,
     color: color.ink,
   },
   callout: {
     fontSize: 16,
     fontWeight: '400' as const,
-    lineHeight: 21,
+    lineHeight: 22,
     color: color.ink,
   },
   subhead: {
     fontSize: 15,
     fontWeight: '400' as const,
-    lineHeight: 20,
+    lineHeight: 21,
     color: color.inkMuted,
   },
   footnote: {
@@ -58,5 +68,21 @@ export const type = {
   },
 };
 
-export const radius = 10;
+export const radius = 16;
+export const radiusSm = 12;
+export const radiusLg = 24;
 export const hit = 44;
+
+export const motion = {
+  fast: 160,
+  base: 260,
+  slow: 400,
+} as const;
+
+export const lift = {
+  shadowColor: color.ink,
+  shadowOffset: { width: 0, height: 10 },
+  shadowOpacity: 0.07,
+  shadowRadius: 20,
+  elevation: 4,
+} as const;

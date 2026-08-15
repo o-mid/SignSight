@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text } from 'react-native';
+import { Alert, StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootStack';
 import { getState, setState, subscribe } from '../state/appState';
@@ -16,8 +16,9 @@ import {
 } from '../wallet/sessionActions';
 import { saveSessions, type SessionSnapshot } from '../wallet/sessionStore';
 import { Button } from '../ui/Button';
+import { FadeIn } from '../ui/motion';
 import { Screen } from '../ui/Screen';
-import { type } from '../ui/theme';
+import { color, lift, radius, space, type } from '../ui/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Session'>;
 
@@ -154,39 +155,63 @@ export default function SessionScreen({ navigation }: Props) {
         </>
       }
     >
-      <Text style={styles.url}>{dappUrl || 'No pending session.'}</Text>
-      {hasProposal ? (
-        <>
-          <Text
-            style={styles.countdown}
-            accessibilityRole="text"
-            accessibilityLiveRegion="polite"
-            accessibilityLabel={`Time left ${formatCountdown(msLeft)}`}
-          >
-            {formatCountdown(msLeft)}
-          </Text>
-          <Text style={styles.hint}>
-            {approveExpired
-              ? 'Approve expired. Reject or Disconnect still work.'
-              : 'Approve before the timer reaches 00:00.'}
-          </Text>
-        </>
-      ) : (
-        <Text style={styles.hint}>
-          {hasSession ? 'This dApp is paired. Disconnect ends the session.' : 'Pair a dApp to start a session.'}
-        </Text>
-      )}
+      <FadeIn>
+        <View style={styles.card}>
+          <Text style={styles.kicker}>dApp</Text>
+          <Text style={styles.url}>{dappUrl || 'No pending session.'}</Text>
+          {hasProposal ? (
+            <>
+              <Text
+                style={[styles.countdown, approveExpired ? styles.expired : null]}
+                accessibilityRole="text"
+                accessibilityLiveRegion="polite"
+                accessibilityLabel={`Time left ${formatCountdown(msLeft)}`}
+              >
+                {formatCountdown(msLeft)}
+              </Text>
+              <Text style={styles.hint}>
+                {approveExpired
+                  ? 'Approve expired. Reject or Disconnect still work.'
+                  : 'Approve before the timer reaches 00:00.'}
+              </Text>
+            </>
+          ) : (
+            <Text style={styles.hint}>
+              {hasSession
+                ? 'This dApp is paired. Disconnect ends the session.'
+                : 'Pair a dApp to start a session.'}
+            </Text>
+          )}
+        </View>
+      </FadeIn>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  card: {
+    backgroundColor: color.surface,
+    borderRadius: radius,
+    padding: space[3],
+    gap: space[1],
+    ...lift,
+  },
+  kicker: {
+    ...type.footnote,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
   url: {
     ...type.headline,
   },
   countdown: {
-    ...type.title,
+    ...type.display,
     fontVariant: ['tabular-nums'],
+    marginTop: space[1],
+  },
+  expired: {
+    color: color.danger,
   },
   hint: {
     ...type.subhead,

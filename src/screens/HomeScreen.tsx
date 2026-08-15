@@ -10,10 +10,11 @@ import { loadSessions } from '../wallet/sessionStore';
 import { getState, setState, subscribe } from '../state/appState';
 import { Banner } from '../ui/Banner';
 import { BrandMark } from '../ui/BrandMark';
-import { EmptyState } from '../ui/EmptyState';
+import { Button } from '../ui/Button';
 import { ListGroup, ListRow } from '../ui/ListRow';
+import { FadeIn, PressScale } from '../ui/motion';
 import { Screen } from '../ui/Screen';
-import { space, type } from '../ui/theme';
+import { color, lift, radius, radiusLg, space, type } from '../ui/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -50,11 +51,16 @@ export default function HomeScreen({ navigation }: Props) {
   );
 
   return (
-    <Screen scroll>
-      <View style={styles.identity}>
-        <BrandMark />
-        <Text style={styles.lede}>See the request before you sign.</Text>
-      </View>
+    <Screen scroll padTop>
+      <FadeIn>
+        <View style={styles.hero}>
+          <View style={styles.well}>
+            <BrandMark size={56} />
+          </View>
+          <Text style={styles.wordmark}>SignSight</Text>
+          <Text style={styles.lede}>See the request before you sign.</Text>
+        </View>
+      </FadeIn>
       {pendingReview ? (
         <Banner
           title="Request waiting"
@@ -69,39 +75,91 @@ export default function HomeScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('Session')}
         />
       ) : null}
-      <View style={styles.sessions}>
-        <Text style={styles.section}>Sessions</Text>
-        {snapshot.sessions.length === 0 ? (
-          <EmptyState title="No paired dApps" body="Pair with a test dApp to review requests." />
-        ) : (
-          <ListGroup>
-            {snapshot.sessions.map(row => (
-              <ListRow
-                key={row.topic}
-                title={row.name || row.dappUrl || 'Session'}
-                subtitle={row.dappUrl}
-                accessory="View"
-                onPress={() => navigation.navigate('Session')}
-              />
-            ))}
-          </ListGroup>
-        )}
-      </View>
-      <ListGroup>
-        <ListRow title="Pair" subtitle="Paste a URI or scan a QR" onPress={() => navigation.navigate('Pair')} />
-        <ListRow title="History" subtitle="Rejected and dry-run rows" onPress={() => navigation.navigate('History')} />
-        <ListRow title="Settings" subtitle="Dry-run is locked on" onPress={() => navigation.navigate('Settings')} />
-      </ListGroup>
+      <FadeIn delay={80}>
+        <Button label="Pair a dApp" onPress={() => navigation.navigate('Pair')} />
+      </FadeIn>
+      <FadeIn delay={140}>
+        <View style={styles.sessions}>
+          <Text style={styles.section}>Sessions</Text>
+          {snapshot.sessions.length === 0 ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyTitle}>Nothing paired yet</Text>
+              <Text style={styles.emptyBody}>A Sepolia test dApp shows up here after you pair.</Text>
+            </View>
+          ) : (
+            <ListGroup>
+              {snapshot.sessions.map(row => (
+                <ListRow
+                  key={row.topic}
+                  title={row.name || row.dappUrl || 'Session'}
+                  subtitle={row.dappUrl}
+                  accessory="Open"
+                  onPress={() => navigation.navigate('Session')}
+                />
+              ))}
+            </ListGroup>
+          )}
+        </View>
+      </FadeIn>
+      <FadeIn delay={200}>
+        <View style={styles.tiles}>
+          <View style={styles.tileWrap}>
+            <PressScale
+              accessibilityLabel="History"
+              onPress={() => navigation.navigate('History')}
+            >
+              <View style={styles.tile}>
+                <View style={styles.tileHead}>
+                  <Text style={styles.tileTitle}>History</Text>
+                  <Text style={styles.chevron}>›</Text>
+                </View>
+                <Text style={styles.tileBody}>Rejected and dry-run rows</Text>
+              </View>
+            </PressScale>
+          </View>
+          <View style={styles.tileWrap}>
+            <PressScale
+              accessibilityLabel="Settings"
+              onPress={() => navigation.navigate('Settings')}
+            >
+              <View style={styles.tile}>
+                <View style={styles.tileHead}>
+                  <Text style={styles.tileTitle}>Settings</Text>
+                  <Text style={styles.chevron}>›</Text>
+                </View>
+                <Text style={styles.tileBody}>Dry-run stays locked on</Text>
+              </View>
+            </PressScale>
+          </View>
+        </View>
+      </FadeIn>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  identity: {
+  hero: {
+    alignItems: 'center',
+    paddingTop: space[2],
+    paddingBottom: space[1],
     gap: space[1],
+  },
+  well: {
+    width: 88,
+    height: 88,
+    borderRadius: radiusLg,
+    backgroundColor: color.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    ...lift,
+    marginBottom: space[1],
+  },
+  wordmark: {
+    ...type.title,
   },
   lede: {
     ...type.subhead,
+    textAlign: 'center',
   },
   sessions: {
     gap: space[1],
@@ -109,5 +167,54 @@ const styles = StyleSheet.create({
   section: {
     ...type.footnote,
     fontWeight: '600',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+  },
+  empty: {
+    backgroundColor: color.surface,
+    borderRadius: radius,
+    paddingHorizontal: space[2],
+    paddingVertical: space[3],
+    gap: 6,
+    ...lift,
+  },
+  emptyTitle: {
+    ...type.body,
+    fontWeight: '600',
+  },
+  emptyBody: {
+    ...type.footnote,
+  },
+  tiles: {
+    flexDirection: 'row',
+    gap: space[2],
+  },
+  tileWrap: {
+    flex: 1,
+  },
+  tile: {
+    minHeight: 96,
+    backgroundColor: color.surface,
+    borderRadius: radius,
+    padding: space[2],
+    gap: 6,
+    ...lift,
+  },
+  tileHead: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  tileTitle: {
+    ...type.callout,
+    fontWeight: '600',
+  },
+  chevron: {
+    fontSize: 22,
+    lineHeight: 24,
+    color: color.inkFaint,
+  },
+  tileBody: {
+    ...type.footnote,
   },
 });

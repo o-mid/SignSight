@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { demoSignerConfigured } from '../wallet/demoSigner';
 import { loadDemoSignerEnabled, saveDemoSignerEnabled } from '../wallet/demoSignerStore';
 import { getState, setState, subscribe } from '../state/appState';
+import { LockBadge } from '../ui/LockBadge';
+import { FadeIn } from '../ui/motion';
 import { Screen } from '../ui/Screen';
-import { color, hit, radius, space, type } from '../ui/theme';
+import { Toggle } from '../ui/Toggle';
+import { color, hit, lift, radius, space, type } from '../ui/theme';
 
 export default function SettingsScreen() {
   const [snapshot, setSnapshot] = useState(getState);
@@ -28,63 +31,70 @@ export default function SettingsScreen() {
 
   return (
     <Screen>
-      <View style={styles.row}>
-        <View style={styles.copy}>
-          <Text style={styles.title}>Dry-run</Text>
-          <Text style={styles.body}>On. Sepolia is never broadcast. A live dApp gets an error, not a fake hash or signature.</Text>
+      <FadeIn>
+        <Text style={styles.kicker}>Signing</Text>
+        <View style={styles.row}>
+          <View style={styles.copy}>
+            <Text style={styles.title}>Dry-run</Text>
+            <Text style={styles.body}>
+              On. Sepolia is never broadcast. A live dApp gets an error, not a fake hash or
+              signature.
+            </Text>
+          </View>
+          <LockBadge label="On · locked" />
         </View>
-        <Switch
-          value={true}
-          disabled={true}
-          accessibilityLabel="Dry-run"
-          accessibilityHint="Dry-run is locked on."
-          accessibilityState={{ disabled: true, checked: true }}
-        />
-      </View>
-      <View style={styles.row}>
-        <View style={styles.copy}>
-          <Text style={styles.title}>Demo signer</Text>
-          <Text style={styles.body}>
-            {configured
-              ? 'Uses DEMO_SIGNER_KEY. Broadcasts only to the local RPC.'
-              : 'Off. Set DEMO_SIGNER_KEY in local .env to enable.'}
-          </Text>
+      </FadeIn>
+      <FadeIn delay={80}>
+        <View style={styles.row}>
+          <View style={styles.copy}>
+            <Text style={styles.title}>Demo signer</Text>
+            <Text style={styles.body}>
+              {configured
+                ? 'Uses DEMO_SIGNER_KEY. Broadcasts only to the local RPC.'
+                : 'Off. Set DEMO_SIGNER_KEY in local .env to enable.'}
+            </Text>
+          </View>
+          <Toggle
+            value={configured && snapshot.demoSignerEnabled}
+            disabled={!configured}
+            onValueChange={value => {
+              void onToggle(value);
+            }}
+            accessibilityLabel="Demo signer"
+            accessibilityHint={
+              configured
+                ? 'Return a real local signature or Anvil hash.'
+                : 'Add DEMO_SIGNER_KEY in local .env first.'
+            }
+          />
         </View>
-        <Switch
-          value={configured && snapshot.demoSignerEnabled}
-          disabled={!configured}
-          onValueChange={value => {
-            void onToggle(value);
-          }}
-          accessibilityLabel="Demo signer"
-          accessibilityHint={
-            configured
-              ? 'Return a real local signature or Anvil hash.'
-              : 'Add DEMO_SIGNER_KEY in local .env first.'
-          }
-          accessibilityState={{ disabled: !configured, checked: configured && snapshot.demoSignerEnabled }}
-        />
-      </View>
+      </FadeIn>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  kicker: {
+    ...type.footnote,
+    fontWeight: '600',
+    letterSpacing: 0.4,
+    textTransform: 'uppercase',
+    marginBottom: -8,
+  },
   row: {
     minHeight: hit,
     backgroundColor: color.surface,
     borderRadius: radius,
-    borderWidth: 1,
-    borderColor: color.line,
     paddingHorizontal: space[2],
     paddingVertical: space[2],
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[2],
+    ...lift,
   },
   copy: {
     flex: 1,
-    gap: 4,
+    gap: 6,
   },
   title: {
     ...type.body,

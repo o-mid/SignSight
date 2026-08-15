@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootStack';
 import { PairError, pairWithUri } from '../wallet/pairUri';
 import { Button } from '../ui/Button';
 import { Field } from '../ui/Field';
+import { FadeIn } from '../ui/motion';
 import { Screen } from '../ui/Screen';
+import { type } from '../ui/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Pair'>;
 
@@ -56,14 +59,36 @@ export default function PairScreen({ navigation, route }: Props) {
         </>
       }
     >
-      <Field
-        label="WalletConnect URI"
-        value={uri}
-        onChangeText={setUri}
-        placeholder="wc:"
-        error={error}
-        helper="Paste a wc: URI from a Sepolia test dApp."
-      />
+      <FadeIn>
+        <View style={styles.intro}>
+          <Text style={styles.title}>Connect a test dApp</Text>
+          <Text style={styles.body}>
+            Paste a WalletConnect URI. We only advertise Sepolia. The next sheet is the decision.
+          </Text>
+        </View>
+      </FadeIn>
+      <FadeIn delay={80}>
+        <Field
+          label="WalletConnect URI"
+          value={uri}
+          onChangeText={setUri}
+          placeholder="wc:"
+          error={error}
+          helper="From a Sepolia test dApp. Nothing broadcasts."
+        />
+      </FadeIn>
     </Screen>
   );
 }
+
+const styles = StyleSheet.create({
+  intro: {
+    gap: 8,
+  },
+  title: {
+    ...type.title,
+  },
+  body: {
+    ...type.subhead,
+  },
+});
