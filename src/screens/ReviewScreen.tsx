@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../navigation/RootStack';
 import { explainRequest } from '../explain/explainRequest';
 import { decodeErc20Calldata } from '../decode/decodeCalldata';
 import { reviewTitle } from '../decode/reviewLabel';
@@ -13,6 +15,34 @@ import {
   rejectSessionRequest,
 } from '../wallet/requestActions';
 import { getState, setState, subscribe } from '../state/appState';
+import { Button } from '../ui/Button';
+import { RiskRow } from '../ui/RiskRow';
+import { Screen } from '../ui/Screen';
+import { type } from '../ui/theme';
+
+type Props = NativeStackScreenProps<RootStackParamList, 'Review'>;
+
+const EMPTY_SIWE: SiweFields = {
+  domain: undefined,
+  address: undefined,
+  statement: undefined,
+  uri: undefined,
+  chain: undefined,
+  nonce: undefined,
+  issuedAt: undefined,
+  expiration: undefined,
+};
+
+const SIWE_LABELS: Record<keyof SiweFields, string> = {
+  domain: 'Domain',
+  address: 'Address',
+  statement: 'Statement',
+  uri: 'URI',
+  chain: 'Chain',
+  nonce: 'Nonce',
+  issuedAt: 'Issued',
+  expiration: 'Expires',
+};
 
 function objectRecord(value: unknown): Record<string, unknown> | undefined {
   if (typeof value !== 'object' || value === null) {
@@ -47,22 +77,17 @@ function signPayloadHex(params: unknown): string | undefined {
   return undefined;
 }
 
-export default function ReviewScreen() {
+export default function ReviewScreen({ navigation }: Props) {
   const [snapshot, setSnapshot] = useState(getState);
   const [showHex, setShowHex] = useState(false);
   const [explainText, setExplainText] = useState<string | null>(null);
+  const [explaining, setExplaining] = useState(false);
 
   useEffect(() => subscribe(() => setSnapshot(getState())), []);
 
-  useEffect(() => {
-    if (auth && isMalformedSiwe(siweFields)) {
-      void rejectMalformedSiwe(auth.id);
-    }
-  }, [auth, siweFields]);
-
   const request = snapshot.pendingRequest;
   const auth = snapshot.pendingAuth;
-  const siweFields = (auth?.fields ?? {}) as SiweFields;
+  const siweFields = (auth?.fields as SiweFields | undefined) ?? EMPTY_SIWE;
   const siweKeys: (keyof SiweFields)[] = [
     'domain',
     'address',
@@ -73,6 +98,13 @@ export default function ReviewScreen() {
     'issuedAt',
     'expiration',
   ];
+
+  useEffect(() => {
+    if (auth && isMalformedSiwe(siweFields)) {
+      void rejectMalformedSiwe(auth.id);
+    }
+  }, [auth, siweFields]);
+
   const method = request?.method ?? '';
   const tx = request ? transactionFields(request.params) : {};
   const data = tx.data;
@@ -107,6 +139,7 @@ export default function ReviewScreen() {
       };
       await appendHistory(row);
       setState({ pendingAuth: null, history: [...getState().history, row] });
+      navigation.goBack();
       return;
     }
     if (!request) {
@@ -119,14 +152,16 @@ export default function ReviewScreen() {
       method,
       dappUrl: request.dappUrl,
       summary,
-      risks: risks.map((item) => item.label),
+      risks: risks.map(item => item.label),
       outcome: 'rejected' as const,
     };
     await appendHistory(row);
     setState({ pendingRequest: null, history: [...getState().history, row] });
+    navigation.goBack();
   }
 
   async function onExplain(): Promise<void> {
+    setExplaining(true);
     const result = await explainRequest({
       decode: { kind: decoded.kind },
       risks,
@@ -134,6 +169,7 @@ export default function ReviewScreen() {
       dappUrl: request?.dappUrl ?? auth?.dappUrl ?? '',
     });
     setExplainText(result.summary);
+    setExplaining(false);
   }
 
   async function onDryRun(): Promise<void> {
@@ -147,105 +183,95 @@ export default function ReviewScreen() {
       method,
       dappUrl: request.dappUrl,
       summary,
-      risks: risks.map((item) => item.label),
+      risks: risks.map(item => item.label),
       outcome: 'dry-run' as const,
     };
     await appendHistory(row);
     setState({ pendingRequest: null, history: [...getState().history, row] });
+    navigation.goBack();
   }
 
   return (
-    <ScrollView style={styles.wrap}>
-      <Text style={styles.title}>Review</Text>
+    <Screen
+      scroll
+      footer={
+        <>
+          <Button
+            role="destructive"
+            label="Reject"
+            onPress={() => {
+              void onReject();
+            }}
+          />
+          {request ? (
+            <Button
+              role="secondary"
+              label="Dry-run"
+              onPress={() => {
+                void onDryRun();
+              }}
+            />
+          ) : null}
+        </>
+      }
+    >
       <Text style={styles.summary}>{summary}</Text>
-      {auth
-        ? siweKeys.map((key) =>
+      {request?.dappUrl || auth?.dappUrl ? (
+        <Text style={styles.meta}>{request?.dappUrl ?? auth?.dappUrl}</Text>
+      ) : null}
+      {auth ? (
+        <View style={styles.stack}>
+          {siweKeys.map(key =>
             siweFields[key] ? (
               <Text key={key} style={styles.meta}>
-                {key}: {siweFields[key]}
+                {SIWE_LABELS[key]}: {siweFields[key]}
               </Text>
             ) : null,
-          )
-        : null}
-      {risks.map((row) => (
-        <Text key={row.code} style={styles.risk}>
-          {row.label}
-        </Text>
-      ))}
-      <Pressable
-        style={styles.button}
+          )}
+        </View>
+      ) : null}
+      {risks.length > 0 ? (
+        <View style={styles.stack}>
+          {risks.map(row => (
+            <RiskRow key={row.code} label={row.label} severity={row.severity} />
+          ))}
+        </View>
+      ) : null}
+      <Button
+        role="ghost"
+        label={explaining ? 'Explaining…' : 'Explain'}
+        loading={explaining}
         onPress={() => {
           void onExplain();
         }}
-      >
-        <Text style={styles.buttonText}>Explain</Text>
-      </Pressable>
-      {explainText ? <Text style={styles.meta}>{explainText}</Text> : null}
-      <Pressable
-        style={styles.button}
+      />
+      {explainText ? <Text style={styles.explain}>{explainText}</Text> : null}
+      <Button
+        role="ghost"
+        label={showHex ? 'Hide raw hex' : 'Raw hex'}
         onPress={() => {
-          setShowHex((current) => !current);
+          setShowHex(current => !current);
         }}
-      >
-        <Text style={styles.buttonText}>Raw hex</Text>
-      </Pressable>
-      {showHex ? <Text style={styles.hex}>{data ?? signHex ?? ''}</Text> : null}
-      <Pressable
-        style={styles.button}
-        onPress={() => {
-          void onReject();
-        }}
-      >
-        <Text style={styles.buttonText}>Reject</Text>
-      </Pressable>
-      <Pressable
-        style={styles.button}
-        onPress={() => {
-          void onDryRun();
-        }}
-      >
-        <Text style={styles.buttonText}>Dry-run</Text>
-      </Pressable>
-    </ScrollView>
+      />
+      {showHex ? <Text selectable style={styles.hex}>{data ?? signHex ?? ''}</Text> : null}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: '#f4f4f5',
-  },
-  title: {
-    fontSize: 22,
-    color: '#111',
-    marginBottom: 12,
+  summary: {
+    ...type.headline,
   },
   meta: {
-    fontSize: 16,
-    color: '#111',
-    marginBottom: 6,
+    ...type.subhead,
   },
-  summary: {
-    fontSize: 18,
-    color: '#111',
-    marginBottom: 16,
-  },
-  risk: {
-    fontSize: 16,
-    color: '#111',
-    marginBottom: 8,
+  explain: {
+    ...type.body,
   },
   hex: {
-    fontSize: 12,
-    color: '#333',
-    marginBottom: 12,
+    ...type.footnote,
   },
-  button: {
-    paddingVertical: 12,
-  },
-  buttonText: {
-    fontSize: 16,
-    color: '#111',
+  stack: {
+    gap: 8,
   },
 });
