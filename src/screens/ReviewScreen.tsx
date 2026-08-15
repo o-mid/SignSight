@@ -4,8 +4,13 @@ import { decodeErc20Calldata } from '../decode/decodeCalldata';
 import { reviewTitle } from '../decode/reviewLabel';
 import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
 import { hexToUtf8 } from '../wallet/personalSign';
+import { isMalformedSiwe, type SiweFields } from '../wallet/siwe';
 import { appendHistory } from '../wallet/historyStore';
-import { completeDryRun, rejectSessionRequest } from '../wallet/requestActions';
+import {
+  completeDryRun,
+  rejectMalformedSiwe,
+  rejectSessionRequest,
+} from '../wallet/requestActions';
 import { getState, setState, subscribe } from '../state/appState';
 
 function asRecord(value: unknown): Record<string, unknown> | undefined {
@@ -47,7 +52,25 @@ export default function ReviewScreen() {
 
   useEffect(() => subscribe(() => setSnapshot(getState())), []);
 
+  useEffect(() => {
+    if (auth && isMalformedSiwe(siweFields)) {
+      void rejectMalformedSiwe(auth.id);
+    }
+  }, [auth, siweFields]);
+
   const request = snapshot.pendingRequest;
+  const auth = snapshot.pendingAuth;
+  const siweFields = (auth?.fields ?? {}) as SiweFields;
+  const siweKeys: (keyof SiweFields)[] = [
+    'domain',
+    'address',
+    'statement',
+    'uri',
+    'chain',
+    'nonce',
+    'issuedAt',
+    'expiration',
+  ];
   const method = request?.method ?? '';
   const tx = request ? txFields(request.params) : {};
   const data = tx.data;
@@ -69,6 +92,21 @@ export default function ReviewScreen() {
   }
 
   async function onReject(): Promise<void> {
+    if (auth && isMalformedSiwe(siweFields)) {
+      await rejectMalformedSiwe(auth.id);
+      const row = {
+        id: String(auth.id),
+        at: Date.now(),
+        method: 'session_authenticate',
+        dappUrl: auth.dappUrl,
+        summary: 'Malformed SIWE.',
+        risks: [],
+        outcome: 'malformed' as const,
+      };
+      await appendHistory(row);
+      setState({ pendingAuth: null, history: [...getState().history, row] });
+      return;
+    }
     if (!request) {
       return;
     }
@@ -108,6 +146,15 @@ export default function ReviewScreen() {
     <ScrollView style={styles.wrap}>
       <Text style={styles.title}>Review</Text>
       <Text style={styles.summary}>{summary}</Text>
+      {auth
+        ? siweKeys.map((key) =>
+            siweFields[key] ? (
+              <Text key={key} style={styles.meta}>
+                {key}: {siweFields[key]}
+              </Text>
+            ) : null,
+          )
+        : null}
       {risks.map((row) => (
         <Text key={row.code} style={styles.risk}>
           {row.label}
@@ -152,6 +199,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#111',
     marginBottom: 12,
+  },
+  meta: {
+    fontSize: 16,
+    color: '#111',
+    marginBottom: 6,
   },
   summary: {
     fontSize: 18,
