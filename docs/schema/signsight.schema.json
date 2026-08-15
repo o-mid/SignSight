@@ -1,0 +1,198 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://signsight.app/schema/signsight.schema.json",
+  "title": "SignSight",
+  "description": "Shapes we persist or pass around. Source of truth is the TypeScript types. Amounts are strings here because JSON has no bigint.",
+  "$defs": {
+    "riskCode": {
+      "type": "string",
+      "enum": [
+        "infinite_approve",
+        "chain_mismatch",
+        "undecoded",
+        "unknown_spender",
+        "zero_address",
+        "personal_sign_opaque",
+        "typed_chain_mismatch",
+        "typed_domain_untrusted",
+        "permit_infinite"
+      ]
+    },
+    "riskSeverity": {
+      "type": "string",
+      "enum": ["high", "medium"]
+    },
+    "riskRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "label", "severity"],
+      "properties": {
+        "code": { "$ref": "#/$defs/riskCode" },
+        "label": { "type": "string" },
+        "severity": { "$ref": "#/$defs/riskSeverity" }
+      }
+    },
+    "decodeKind": {
+      "type": "string",
+      "enum": [
+        "transfer",
+        "approve",
+        "increase_allowance",
+        "decrease_allowance",
+        "undecoded"
+      ]
+    },
+    "decodeResult": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "$ref": "#/$defs/decodeKind" },
+        "to": { "type": "string" },
+        "spender": { "type": "string" },
+        "amount": { "type": "string", "description": "bigint as a decimal string" },
+        "token": { "type": "string" }
+      }
+    },
+    "typedDataView": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain", "types", "message", "raw", "malformed"],
+      "properties": {
+        "name": { "type": "string" },
+        "verifyingContract": { "type": "string" },
+        "chainId": { "type": "string" },
+        "primaryType": { "type": "string" },
+        "domain": { "type": "object" },
+        "types": { "type": "object" },
+        "message": { "type": "object" },
+        "raw": { "type": "string" },
+        "malformed": { "type": "boolean" },
+        "value": { "type": "string" },
+        "spender": { "type": "string" }
+      }
+    },
+    "siweFields": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "domain": { "type": ["string", "null"] },
+        "address": { "type": ["string", "null"] },
+        "statement": { "type": ["string", "null"] },
+        "uri": { "type": ["string", "null"] },
+        "chain": { "type": ["string", "null"] },
+        "nonce": { "type": ["string", "null"] },
+        "issuedAt": { "type": ["string", "null"] },
+        "expiration": { "type": ["string", "null"] }
+      }
+    },
+    "historyOutcome": {
+      "type": "string",
+      "enum": ["rejected", "dry-run", "malformed", "demo-sign"]
+    },
+    "historyRow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "at", "method", "dappUrl", "summary", "risks", "outcome"],
+      "properties": {
+        "id": { "type": "string" },
+        "at": { "type": "integer" },
+        "method": { "type": "string" },
+        "dappUrl": { "type": "string" },
+        "summary": { "type": "string" },
+        "risks": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "outcome": { "$ref": "#/$defs/historyOutcome" }
+      }
+    },
+    "sessionSnapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topic", "dappUrl", "name"],
+      "properties": {
+        "topic": { "type": "string" },
+        "dappUrl": { "type": "string" },
+        "name": { "type": "string" }
+      }
+    },
+    "pendingRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["topic", "id", "method", "params", "dappUrl"],
+      "properties": {
+        "topic": { "type": "string" },
+        "id": { "type": "integer" },
+        "method": { "type": "string" },
+        "params": true,
+        "dappUrl": { "type": "string" },
+        "chainId": { "type": "string" }
+      }
+    },
+    "explainInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decode", "risks", "method", "dappUrl"],
+      "properties": {
+        "decode": {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {
+            "kind": { "type": "string" }
+          }
+        },
+        "risks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/riskRow" }
+        },
+        "method": { "type": "string" },
+        "dappUrl": { "type": "string" }
+      }
+    },
+    "explainOutput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["summary"],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "maxLength": 240
+        }
+      }
+    },
+    "dryRunError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "jsonrpc", "error"],
+      "properties": {
+        "id": { "type": "integer" },
+        "jsonrpc": { "const": "2.0" },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "message"],
+          "properties": {
+            "code": { "const": 5000 },
+            "message": { "type": "string" }
+          }
+        }
+      },
+      "not": {
+        "required": ["result"]
+      }
+    },
+    "envFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "WALLETCONNECT_PROJECT_ID": { "type": "string" },
+        "EXPLAIN_PROVIDER": { "type": "string", "enum": ["mock", "http"] },
+        "EXPLAIN_API_URL": { "type": "string" },
+        "EXPLAIN_API_KEY": { "type": "string" },
+        "DEMO_SIGNER_KEY": { "type": "string" },
+        "DEMO_SIGNER_RPC": { "type": "string" }
+      }
+    }
+  }
+}

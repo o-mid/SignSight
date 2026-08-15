@@ -29,3 +29,5 @@ Token labels are a static map in `src/decode/tokens.ts`. USDT on that Sepolia ad
 Risk is a local function. No model in that path. The explainer, if you turn it on, writes a sentence. Review still shows the risk rows, and Reject / Dry-run ignore the sentence.
 
 Demo signer is optional. A key in `.env` can return a real local signature or an Anvil hash. That's for a dApp that refuses to continue on an error. It does not talk to Sepolia.
+
+Screens are in [docs/arch/screens.md](arch/screens.md). The request path is in [docs/arch/request-flow.md](arch/request-flow.md). JSON schema is [docs/schema/](schema/README.md).
