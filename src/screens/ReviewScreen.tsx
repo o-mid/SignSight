@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
+import { explainRequest } from '../explain/explainRequest';
 import { decodeErc20Calldata } from '../decode/decodeCalldata';
 import { reviewTitle } from '../decode/reviewLabel';
 import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
@@ -49,6 +50,7 @@ function personalSignHex(params: unknown): string | undefined {
 export default function ReviewScreen() {
   const [snapshot, setSnapshot] = useState(getState);
   const [showHex, setShowHex] = useState(false);
+  const [explainText, setExplainText] = useState<string | null>(null);
 
   useEffect(() => subscribe(() => setSnapshot(getState())), []);
 
@@ -124,6 +126,16 @@ export default function ReviewScreen() {
     setState({ pendingRequest: null, history: [...getState().history, row] });
   }
 
+  async function onExplain(): Promise<void> {
+    const result = await explainRequest({
+      decode: { kind: decoded.kind },
+      risks,
+      method: method || 'session_authenticate',
+      dappUrl: request?.dappUrl ?? auth?.dappUrl ?? '',
+    });
+    setExplainText(result.summary);
+  }
+
   async function onDryRun(): Promise<void> {
     if (!request) {
       return;
@@ -160,6 +172,15 @@ export default function ReviewScreen() {
           {row.label}
         </Text>
       ))}
+      <Pressable
+        style={styles.button}
+        onPress={() => {
+          void onExplain();
+        }}
+      >
+        <Text style={styles.buttonText}>Explain</Text>
+      </Pressable>
+      {explainText ? <Text style={styles.meta}>{explainText}</Text> : null}
       <Pressable
         style={styles.button}
         onPress={() => {
