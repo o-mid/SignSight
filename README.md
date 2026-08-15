@@ -26,7 +26,7 @@ flowchart LR
 
 Decode and risk run on device. The explainer is optional copy. It never decides the buttons.
 
-More in [docs/architecture.md](docs/architecture.md). Screens and the request path are under [docs/arch/](docs/arch/screens.md). Shapes we persist are in [docs/schema/](docs/schema/README.md).
+More in [docs/architecture.md](docs/architecture.md). Screens and the request path are under [docs/arch/](docs/arch/screens.md). Simulator shots are in [docs/screenshots/](docs/screenshots/README.md). Shapes we persist are in [docs/schema/](docs/schema/README.md).
 
 ## Run
 
