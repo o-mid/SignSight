@@ -1,3 +1,4 @@
+// Sepolia only. A request on another chain is a risk row, not a supported path.
 export const WALLET_CHAIN_ID = 'eip155:11155111';
 
 export const DEMO_ADDRESS = '0xAb5801a7D398351b8bE11C439e05C5B3259aeC9B';

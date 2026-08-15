@@ -168,6 +168,7 @@ export default function ReviewScreen({ navigation }: Props) {
     navigation.goBack();
   }
 
+  // Copy only. Reject, dry-run, and demo sign do not read explainText.
   async function onExplain(): Promise<void> {
     setExplaining(true);
     const result = await explainRequest({

@@ -13,6 +13,7 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 
 function accountFromEnv() {
   const key = demoSignerKey();
+  // Key comes from .env. We never ship one, and we don't fall back to Anvil's well-known account.
   if (!/^0x[0-9a-fA-F]{64}$/.test(key)) {
     throw new Error('Demo signer key is missing.');
   }
@@ -79,6 +80,7 @@ async function signTyped(params: unknown): Promise<Hex> {
   });
 }
 
+// Local Anvil only. This is how a dApp can see a real success payload without touching Sepolia.
 async function sendLocal(params: unknown): Promise<Hex> {
   if (!Array.isArray(params) || params.length === 0) {
     throw new Error('Transaction is missing.');

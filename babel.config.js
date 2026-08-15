@@ -69,5 +69,6 @@ function inlineEnv() {
 
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
+  // Jest sets JEST_WORKER_ID. Skip inlining there so tests can set process.env themselves.
   plugins: process.env.JEST_WORKER_ID ? [] : [inlineEnv],
 };

@@ -109,6 +109,7 @@ export function parseSiweMessage(message: string): SiweFields {
 }
 
 export function isMalformedSiwe(fields: SiweFields): boolean {
+  // Missing nonce or domain is enough. We reject instead of asking the user to paper over it.
   return !fields.nonce || !fields.domain
 }
 

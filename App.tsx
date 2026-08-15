@@ -12,6 +12,7 @@ import {
 function App() {
   useEffect(() => {
     const projectId = walletConnectProjectId();
+    // UI still works without a project id. Pairing just never starts.
     if (projectId.length === 0) {
       return;
     }

@@ -31,6 +31,7 @@ export function listenSessionProposals(): void {
 export async function approveSessionProposal(
   proposal: SessionProposal,
 ): Promise<void> {
+  // We only approve Sepolia plus the methods in chain.ts. Everything else stays out.
   const namespaces = buildApprovedNamespaces({
     proposal: proposal.params,
     supportedNamespaces: {
@@ -82,5 +83,6 @@ export function formatCountdown(msLeft: number): string {
 }
 
 export function isApproveExpired(msLeft: number): boolean {
+  // Approve dies at 00:00. Reject and Disconnect still work.
   return msLeft <= 0;
 }
