@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { Camera, useCameraDevice, useCodeScanner } from 'react-native-vision-camera';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootStack';
+import { Button } from '../ui/Button';
+import { Screen } from '../ui/Screen';
+import { color, space, type } from '../ui/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Scan'>;
 
@@ -11,7 +14,7 @@ export default function ScanScreen({ navigation }: Props) {
   const device = useCameraDevice('back');
   const codeScanner = useCodeScanner({
     codeTypes: ['qr'],
-    onCodeScanned: (codes) => {
+    onCodeScanned: codes => {
       const value = codes[0]?.value;
       if (value && value.startsWith('wc:')) {
         navigation.navigate('Pair', { uri: value });
@@ -21,26 +24,25 @@ export default function ScanScreen({ navigation }: Props) {
 
   if (device == null) {
     return (
-      <View style={styles.wrap}>
-        <Text style={styles.title}>Scan QR</Text>
-        <Text style={styles.meta}>No camera.</Text>
-        <Pressable style={styles.button} onPress={() => navigation.goBack()}>
-          <Text style={styles.buttonText}>Back</Text>
-        </Pressable>
-      </View>
+      <Screen
+        footer={
+          <Button role="secondary" label="Close" onPress={() => navigation.goBack()} />
+        }
+      >
+        <Text style={styles.meta}>No camera available on this device.</Text>
+      </Screen>
     );
   }
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.title}>Scan QR</Text>
-      {error ? <Text style={styles.meta}>{error}</Text> : null}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       <Camera
         style={styles.camera}
         device={device}
         isActive={true}
         codeScanner={codeScanner}
-        onError={(event) => {
+        onError={event => {
           setError(event.message);
         }}
       />
@@ -51,28 +53,19 @@ export default function ScanScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   wrap: {
     flex: 1,
-    padding: 24,
-    backgroundColor: '#f4f4f5',
-  },
-  title: {
-    fontSize: 22,
-    color: '#111',
-    marginBottom: 12,
-  },
-  meta: {
-    fontSize: 16,
-    color: '#111',
-    marginBottom: 12,
+    backgroundColor: color.ink,
   },
   camera: {
     flex: 1,
-    minHeight: 240,
   },
-  button: {
-    paddingVertical: 12,
+  meta: {
+    ...type.body,
   },
-  buttonText: {
-    fontSize: 16,
-    color: '#111',
+  error: {
+    ...type.footnote,
+    color: color.danger,
+    paddingHorizontal: space[3],
+    paddingVertical: space[1],
+    backgroundColor: color.dangerBg,
   },
 });

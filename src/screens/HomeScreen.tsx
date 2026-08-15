@@ -1,10 +1,16 @@
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { StyleSheet, Text } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootStack';
 import { loadHistory } from '../wallet/historyStore';
 import { loadSessions } from '../wallet/sessionStore';
 import { getState, setState, subscribe } from '../state/appState';
+import { Banner } from '../ui/Banner';
+import { EmptyState } from '../ui/EmptyState';
+import { ListGroup, ListRow } from '../ui/ListRow';
+import { Screen } from '../ui/Screen';
+import { type } from '../ui/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -19,62 +25,69 @@ export default function HomeScreen({ navigation }: Props) {
     });
   }, []);
 
-  const pending = snapshot.pendingCount > 0;
+  const pendingReview = snapshot.pendingRequest !== null || snapshot.pendingAuth !== null;
+  const pendingSession = snapshot.pendingProposal !== null;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (pendingReview) {
+        navigation.navigate('Review');
+        return;
+      }
+      if (pendingSession) {
+        navigation.navigate('Session');
+      }
+    }, [navigation, pendingReview, pendingSession]),
+  );
 
   return (
-    <View style={styles.wrap}>
-      <Text style={styles.title}>SignSight</Text>
-      <Text style={styles.meta}>Sessions: {snapshot.sessions.length}</Text>
-      {pending ? <Text style={styles.badge}>Pending: {snapshot.pendingCount}</Text> : null}
-      <Pressable style={styles.link} onPress={() => navigation.navigate('Pair')}>
-        <Text style={styles.linkText}>Pair</Text>
-      </Pressable>
-      <Pressable style={styles.link} onPress={() => navigation.navigate('History')}>
-        <Text style={styles.linkText}>History</Text>
-      </Pressable>
-      <Pressable style={styles.link} onPress={() => navigation.navigate('Settings')}>
-        <Text style={styles.linkText}>Settings</Text>
-      </Pressable>
-      {snapshot.pendingProposal !== null ? (
-        <Pressable style={styles.link} onPress={() => navigation.navigate('Session')}>
-          <Text style={styles.linkText}>Session</Text>
-        </Pressable>
+    <Screen scroll>
+      <Text style={styles.lede}>See the request before you sign.</Text>
+      {pendingReview ? (
+        <Banner
+          title="Request waiting"
+          body="Open the review sheet to reject or dry-run."
+          onPress={() => navigation.navigate('Review')}
+        />
       ) : null}
-      {snapshot.pendingRequest !== null || snapshot.pendingAuth !== null ? (
-        <Pressable style={styles.link} onPress={() => navigation.navigate('Review')}>
-          <Text style={styles.linkText}>Review</Text>
-        </Pressable>
+      {pendingSession && !pendingReview ? (
+        <Banner
+          title="Session waiting"
+          body="Open the session sheet to approve or reject."
+          onPress={() => navigation.navigate('Session')}
+        />
       ) : null}
-    </View>
+      <Text style={styles.section}>Sessions</Text>
+      {snapshot.sessions.length === 0 ? (
+        <EmptyState title="No paired dApps" body="Pair with a test dApp to review requests." />
+      ) : (
+        <ListGroup>
+          {snapshot.sessions.map(row => (
+            <ListRow
+              key={row.topic}
+              title={row.name || row.dappUrl || 'Session'}
+              subtitle={row.dappUrl}
+              accessory="View"
+              onPress={() => navigation.navigate('Session')}
+            />
+          ))}
+        </ListGroup>
+      )}
+      <ListGroup>
+        <ListRow title="Pair" subtitle="Paste a URI or scan a QR" onPress={() => navigation.navigate('Pair')} />
+        <ListRow title="History" subtitle="Rejected and dry-run rows" onPress={() => navigation.navigate('History')} />
+        <ListRow title="Settings" subtitle="Dry-run is locked on" onPress={() => navigation.navigate('Settings')} />
+      </ListGroup>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  wrap: {
-    flex: 1,
-    padding: 24,
-    backgroundColor: '#f4f4f5',
+  lede: {
+    ...type.subhead,
   },
-  title: {
-    fontSize: 22,
-    color: '#111',
-    marginBottom: 12,
-  },
-  meta: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 12,
-  },
-  badge: {
-    fontSize: 16,
-    color: '#111',
-    marginBottom: 12,
-  },
-  link: {
-    paddingVertical: 10,
-  },
-  linkText: {
-    fontSize: 16,
-    color: '#111',
+  section: {
+    ...type.footnote,
+    fontWeight: '600',
   },
 });
