@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { StyleSheet, Text } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootStack';
@@ -7,10 +7,11 @@ import { loadHistory } from '../wallet/historyStore';
 import { loadSessions } from '../wallet/sessionStore';
 import { getState, setState, subscribe } from '../state/appState';
 import { Banner } from '../ui/Banner';
+import { BrandMark } from '../ui/BrandMark';
 import { EmptyState } from '../ui/EmptyState';
 import { ListGroup, ListRow } from '../ui/ListRow';
 import { Screen } from '../ui/Screen';
-import { type } from '../ui/theme';
+import { space, type } from '../ui/theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -42,7 +43,10 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <Screen scroll>
-      <Text style={styles.lede}>See the request before you sign.</Text>
+      <View style={styles.identity}>
+        <BrandMark />
+        <Text style={styles.lede}>See the request before you sign.</Text>
+      </View>
       {pendingReview ? (
         <Banner
           title="Request waiting"
@@ -57,22 +61,24 @@ export default function HomeScreen({ navigation }: Props) {
           onPress={() => navigation.navigate('Session')}
         />
       ) : null}
-      <Text style={styles.section}>Sessions</Text>
-      {snapshot.sessions.length === 0 ? (
-        <EmptyState title="No paired dApps" body="Pair with a test dApp to review requests." />
-      ) : (
-        <ListGroup>
-          {snapshot.sessions.map(row => (
-            <ListRow
-              key={row.topic}
-              title={row.name || row.dappUrl || 'Session'}
-              subtitle={row.dappUrl}
-              accessory="View"
-              onPress={() => navigation.navigate('Session')}
-            />
-          ))}
-        </ListGroup>
-      )}
+      <View style={styles.sessions}>
+        <Text style={styles.section}>Sessions</Text>
+        {snapshot.sessions.length === 0 ? (
+          <EmptyState title="No paired dApps" body="Pair with a test dApp to review requests." />
+        ) : (
+          <ListGroup>
+            {snapshot.sessions.map(row => (
+              <ListRow
+                key={row.topic}
+                title={row.name || row.dappUrl || 'Session'}
+                subtitle={row.dappUrl}
+                accessory="View"
+                onPress={() => navigation.navigate('Session')}
+              />
+            ))}
+          </ListGroup>
+        )}
+      </View>
       <ListGroup>
         <ListRow title="Pair" subtitle="Paste a URI or scan a QR" onPress={() => navigation.navigate('Pair')} />
         <ListRow title="History" subtitle="Rejected and dry-run rows" onPress={() => navigation.navigate('History')} />
@@ -83,8 +89,14 @@ export default function HomeScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
+  identity: {
+    gap: space[1],
+  },
   lede: {
     ...type.subhead,
+  },
+  sessions: {
+    gap: space[1],
   },
   section: {
     ...type.footnote,

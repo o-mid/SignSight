@@ -1,7 +1,7 @@
 import { NavigationContainer, DefaultTheme, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StatusBar, StyleSheet, Text } from 'react-native';
 import HomeScreen from '../screens/HomeScreen';
 import PairScreen from '../screens/PairScreen';
 import ScanScreen from '../screens/ScanScreen';
@@ -53,6 +53,7 @@ const navTheme = {
 export default function RootStack() {
   return (
     <NavigationContainer theme={navTheme}>
+      <StatusBar barStyle="dark-content" backgroundColor={color.bg} />
       <Stack.Navigator
         initialRouteName="Home"
         screenOptions={{

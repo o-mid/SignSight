@@ -1,5 +1,7 @@
 # SignSight
 
+![SignSight](src/assets/banner.png)
+
 Portfolio demo wallet. See the request before you sign.
 
 React Native CLI (TypeScript). A dApp pairs over WalletConnect. This wallet shows a human summary of `eth_sendTransaction`, `personal_sign`, and `session_authenticate` (SIWE). It is not a custodial product. No mainnet funds. No seed phrase flow.
