@@ -3,6 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../navigation/RootStack';
+import { demoSignerConfigured } from '../wallet/demoSigner';
+import { loadDemoSignerEnabled } from '../wallet/demoSignerStore';
 import { loadHistory } from '../wallet/historyStore';
 import { loadSessions } from '../wallet/sessionStore';
 import { getState, setState, subscribe } from '../state/appState';
@@ -21,9 +23,15 @@ export default function HomeScreen({ navigation }: Props) {
   useEffect(() => subscribe(() => setSnapshot(getState())), []);
 
   useEffect(() => {
-    void Promise.all([loadSessions(), loadHistory()]).then(([sessions, history]) => {
-      setState({ sessions, history });
-    });
+    void Promise.all([loadSessions(), loadHistory(), loadDemoSignerEnabled()]).then(
+      ([sessions, history, demoSignerEnabled]) => {
+        setState({
+          sessions,
+          history,
+          demoSignerEnabled: demoSignerConfigured() && demoSignerEnabled,
+        });
+      },
+    );
   }, []);
 
   const pendingReview = snapshot.pendingRequest !== null || snapshot.pendingAuth !== null;

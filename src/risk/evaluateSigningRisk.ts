@@ -1,4 +1,8 @@
 import { maxUint256 } from 'viem';
+import {
+  isKnownVerifyingContract,
+  isPermitInfinite,
+} from '../decode/typedData';
 import type { RiskCode, RiskInput, RiskResult, RiskRow, RiskSeverity } from './types';
 
 export const WALLET_CHAIN_ID = 'eip155:11155111';
@@ -13,6 +17,9 @@ const RISK_LABELS: Record<RiskCode, string> = {
   unknown_spender: 'Unknown spender',
   zero_address: 'Zero address',
   personal_sign_opaque: 'Not plain text',
+  typed_chain_mismatch: 'Typed chain mismatch',
+  typed_domain_untrusted: 'Unknown verifying contract',
+  permit_infinite: 'Unlimited permit',
 };
 
 const RISK_SEVERITY: Record<RiskCode, RiskSeverity> = {
@@ -22,6 +29,9 @@ const RISK_SEVERITY: Record<RiskCode, RiskSeverity> = {
   unknown_spender: 'high',
   zero_address: 'high',
   personal_sign_opaque: 'medium',
+  typed_chain_mismatch: 'high',
+  typed_domain_untrusted: 'high',
+  permit_infinite: 'high',
 };
 
 function riskRow(code: RiskCode): RiskRow {
@@ -58,16 +68,44 @@ function isPlainUtf8FromHex(hex: string): boolean {
   }
 }
 
+function evaluateTypedRisk(input: RiskInput): RiskResult {
+  const rows: RiskRow[] = [];
+  const typed = input.typed;
+  if (typed === undefined || typed.malformed) {
+    rows.push(riskRow('undecoded'));
+    return { rows };
+  }
+  if (typed.chainId !== undefined && normalizeChainId(typed.chainId) !== WALLET_CHAIN_ID) {
+    rows.push(riskRow('typed_chain_mismatch'));
+  }
+  if (!isKnownVerifyingContract(typed.verifyingContract)) {
+    rows.push(riskRow('typed_domain_untrusted'));
+  }
+  if (isPermitInfinite(typed.value)) {
+    rows.push(riskRow('permit_infinite'));
+  }
+  return { rows };
+}
+
 export function evaluateSigningRisk(input: RiskInput): RiskResult {
+  if (input.method === 'eth_signTypedData_v4') {
+    return evaluateTypedRisk(input);
+  }
+
   const rows: RiskRow[] = [];
   const { decode } = input;
 
-  if (decode.kind === 'approve' && decode.amount === maxUint256) {
+  const allowance =
+    decode.kind === 'approve' ||
+    decode.kind === 'increase_allowance' ||
+    decode.kind === 'decrease_allowance';
+
+  if (allowance && decode.amount === maxUint256) {
     rows.push(riskRow('infinite_approve'));
   }
 
   if (
-    decode.kind === 'approve' &&
+    allowance &&
     decode.spender !== undefined &&
     !SPENDER_ALLOWLIST.some(
       (allowed) => allowed.toLowerCase() === decode.spender?.toLowerCase(),
@@ -87,7 +125,7 @@ export function evaluateSigningRisk(input: RiskInput): RiskResult {
   if (decode.kind === 'transfer' && decode.to !== undefined && decode.to.toLowerCase() === ZERO_ADDRESS) {
     rows.push(riskRow('zero_address'));
   }
-  if (decode.kind === 'approve' && decode.spender !== undefined && decode.spender.toLowerCase() === ZERO_ADDRESS) {
+  if (allowance && decode.spender !== undefined && decode.spender.toLowerCase() === ZERO_ADDRESS) {
     rows.push(riskRow('zero_address'));
   }
 

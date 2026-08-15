@@ -5,11 +5,13 @@ import type { RootStackParamList } from '../navigation/RootStack';
 import { explainRequest } from '../explain/explainRequest';
 import { decodeErc20Calldata } from '../decode/decodeCalldata';
 import { reviewTitle } from '../decode/reviewLabel';
+import { parseTypedData, typedReviewTitle } from '../decode/typedData';
 import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
 import { hexToUtf8 } from '../wallet/personalSign';
 import { isMalformedSiwe, type SiweFields } from '../wallet/siwe';
 import { appendHistory } from '../wallet/historyStore';
 import {
+  completeDemoSign,
   completeDryRun,
   rejectMalformedSiwe,
   rejectSessionRequest,
@@ -79,9 +81,10 @@ function signPayloadHex(params: unknown): string | undefined {
 
 export default function ReviewScreen({ navigation }: Props) {
   const [snapshot, setSnapshot] = useState(getState);
-  const [showHex, setShowHex] = useState(false);
+  const [showRaw, setShowRaw] = useState(false);
   const [explainText, setExplainText] = useState<string | null>(null);
   const [explaining, setExplaining] = useState(false);
+  const [signError, setSignError] = useState<string | null>(null);
 
   useEffect(() => subscribe(() => setSnapshot(getState())), []);
 
@@ -110,6 +113,7 @@ export default function ReviewScreen({ navigation }: Props) {
   const data = tx.data;
   const signHex = request ? signPayloadHex(request.params) : undefined;
   const decoded = decodeErc20Calldata(data);
+  const typed = method === 'eth_signTypedData_v4' ? parseTypedData(request?.params) : null;
   const utf8 = signHex ? hexToUtf8(signHex) : null;
   const risks = request
     ? evaluateSigningRisk({
@@ -117,12 +121,16 @@ export default function ReviewScreen({ navigation }: Props) {
         chainId: request.chainId,
         decode: decoded,
         personalSignHex: signHex,
+        typed: typed ?? undefined,
       }).rows
     : [];
 
   let summary = reviewTitle({ kind: decoded.kind, tokenAddress: tx.to });
   if (method === 'personal_sign' && utf8) {
     summary = utf8;
+  }
+  if (typed) {
+    summary = typedReviewTitle(typed);
   }
 
   async function onReject(): Promise<void> {
@@ -191,6 +199,31 @@ export default function ReviewScreen({ navigation }: Props) {
     navigation.goBack();
   }
 
+  async function onDemoSign(): Promise<void> {
+    if (!request) {
+      return;
+    }
+    setSignError(null);
+    try {
+      await completeDemoSign({ topic: request.topic, id: request.id }, method, request.params);
+    } catch {
+      setSignError('Local signer failed. Nothing was sent to Sepolia.');
+      return;
+    }
+    const row = {
+      id: String(request.id),
+      at: Date.now(),
+      method,
+      dappUrl: request.dappUrl,
+      summary,
+      risks: risks.map(item => item.label),
+      outcome: 'demo-sign' as const,
+    };
+    await appendHistory(row);
+    setState({ pendingRequest: null, history: [...getState().history, row] });
+    navigation.goBack();
+  }
+
   return (
     <Screen
       scroll
@@ -203,7 +236,16 @@ export default function ReviewScreen({ navigation }: Props) {
               void onReject();
             }}
           />
-          {request ? (
+          {request && snapshot.demoSignerEnabled ? (
+            <Button
+              role="secondary"
+              label="Demo sign"
+              onPress={() => {
+                void onDemoSign();
+              }}
+            />
+          ) : null}
+          {request && !snapshot.demoSignerEnabled ? (
             <Button
               role="secondary"
               label="Dry-run"
@@ -230,6 +272,18 @@ export default function ReviewScreen({ navigation }: Props) {
           )}
         </View>
       ) : null}
+      {typed ? (
+        <View style={styles.stack}>
+          {typed.name ? <Text style={styles.meta}>Name: {typed.name}</Text> : null}
+          {typed.verifyingContract ? (
+            <Text style={styles.meta}>Verifying contract: {typed.verifyingContract}</Text>
+          ) : null}
+          {typed.chainId ? <Text style={styles.meta}>Chain: {typed.chainId}</Text> : null}
+          {typed.primaryType ? (
+            <Text style={styles.meta}>Primary type: {typed.primaryType}</Text>
+          ) : null}
+        </View>
+      ) : null}
       {risks.length > 0 ? (
         <View style={styles.stack}>
           {risks.map(row => (
@@ -246,14 +300,19 @@ export default function ReviewScreen({ navigation }: Props) {
         }}
       />
       {explainText ? <Text style={styles.explain}>{explainText}</Text> : null}
+      {signError ? <Text style={styles.meta}>{signError}</Text> : null}
       <Button
         role="ghost"
-        label={showHex ? 'Hide raw hex' : 'Raw hex'}
+        label={showRaw ? 'Hide raw' : typed ? 'Raw JSON' : 'Raw hex'}
         onPress={() => {
-          setShowHex(current => !current);
+          setShowRaw(current => !current);
         }}
       />
-      {showHex ? <Text selectable style={styles.hex}>{data ?? signHex ?? ''}</Text> : null}
+      {showRaw ? (
+        <Text selectable style={styles.hex}>
+          {typed ? typed.raw : data ?? signHex ?? ''}
+        </Text>
+      ) : null}
     </Screen>
   );
 }

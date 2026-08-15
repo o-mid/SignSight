@@ -1,6 +1,7 @@
 import { getWalletKit } from './walletKit';
 import { setState } from '../state/appState';
 import { extractSiweFromAuth } from './siwe';
+import { signDemoRequest } from './demoSigner';
 
 export type SessionRequestRef = {
   topic: string;
@@ -69,6 +70,22 @@ export async function completeDryRun(ref: SessionRequestRef): Promise<void> {
   await getWalletKit().respondSessionRequest({
     topic: ref.topic,
     response: dryRunError(ref.id),
+  });
+}
+
+export async function completeDemoSign(
+  ref: SessionRequestRef,
+  method: string,
+  params: unknown,
+): Promise<void> {
+  const result = await signDemoRequest(method, params);
+  await getWalletKit().respondSessionRequest({
+    topic: ref.topic,
+    response: {
+      id: ref.id,
+      jsonrpc: '2.0',
+      result,
+    },
   });
 }
 

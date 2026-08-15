@@ -1,8 +1,15 @@
 import { decodeFunctionData } from 'viem';
 import { erc20Abi } from './erc20Abi';
 
+export type DecodeKind =
+  | 'transfer'
+  | 'approve'
+  | 'increase_allowance'
+  | 'decrease_allowance'
+  | 'undecoded';
+
 export type DecodeResult = {
-  kind: 'transfer' | 'approve' | 'undecoded';
+  kind: DecodeKind;
   to?: `0x${string}`;
   spender?: `0x${string}`;
   amount?: bigint;
@@ -37,6 +44,22 @@ export function decodeErc20Calldata(
     if (decoded.functionName === 'approve') {
       return {
         kind: 'approve',
+        spender: decoded.args[0],
+        amount: decoded.args[1],
+      };
+    }
+
+    if (decoded.functionName === 'increaseAllowance') {
+      return {
+        kind: 'increase_allowance',
+        spender: decoded.args[0],
+        amount: decoded.args[1],
+      };
+    }
+
+    if (decoded.functionName === 'decreaseAllowance') {
+      return {
+        kind: 'decrease_allowance',
         spender: decoded.args[0],
         amount: decoded.args[1],
       };

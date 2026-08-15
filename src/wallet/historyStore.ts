@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export const HISTORY_KEY = '@signsight/history';
 
-export type HistoryOutcome = 'rejected' | 'dry-run' | 'malformed';
+export type HistoryOutcome = 'rejected' | 'dry-run' | 'malformed' | 'demo-sign';
 
 export type HistoryRow = {
   id: string;

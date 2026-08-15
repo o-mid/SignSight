@@ -4,7 +4,7 @@ export function reviewTitle({
   kind,
   tokenAddress,
 }: {
-  kind: 'transfer' | 'approve' | 'undecoded';
+  kind: 'transfer' | 'approve' | 'increase_allowance' | 'decrease_allowance' | 'undecoded';
   tokenAddress?: string;
 }): string {
   if (kind === 'undecoded') {
@@ -14,6 +14,12 @@ export function reviewTitle({
   const symbol = tokenAddress ? tokenSymbol(tokenAddress) : undefined;
   if (symbol && kind === 'approve') {
     return `Approve ${symbol}`;
+  }
+  if (symbol && kind === 'increase_allowance') {
+    return `Increase ${symbol}`;
+  }
+  if (symbol && kind === 'decrease_allowance') {
+    return `Decrease ${symbol}`;
   }
   if (symbol && kind === 'transfer') {
     return `Transfer ${symbol}`;
