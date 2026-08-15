@@ -12,6 +12,9 @@ function outcomeLabel(outcome: string): string {
   if (outcome === 'malformed') {
     return 'Malformed';
   }
+  if (outcome === 'demo-sign') {
+    return 'Demo sign';
+  }
   return 'Rejected';
 }
 

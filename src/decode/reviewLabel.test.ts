@@ -22,6 +22,8 @@ describe('reviewTitle', () => {
     expect(reviewTitle({ kind: 'approve', tokenAddress: usdt })).toBe('Approve USDT');
     expect(reviewTitle({ kind: 'transfer', tokenAddress: wethA })).toBe('Transfer WETH');
     expect(reviewTitle({ kind: 'approve', tokenAddress: wethB })).toBe('Approve WETH');
+    expect(reviewTitle({ kind: 'increase_allowance', tokenAddress: usdt })).toBe('Increase USDT');
+    expect(reviewTitle({ kind: 'decrease_allowance', tokenAddress: usdt })).toBe('Decrease USDT');
   });
 
   it('shortens unmapped token addresses', () => {

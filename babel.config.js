@@ -6,6 +6,8 @@ const ENV_KEYS = [
   'EXPLAIN_PROVIDER',
   'EXPLAIN_API_URL',
   'EXPLAIN_API_KEY',
+  'DEMO_SIGNER_KEY',
+  'DEMO_SIGNER_RPC',
 ];
 
 function loadDotEnv() {
@@ -67,5 +69,5 @@ function inlineEnv() {
 
 module.exports = {
   presets: ['module:@react-native/babel-preset'],
-  plugins: [inlineEnv],
+  plugins: process.env.JEST_WORKER_ID ? [] : [inlineEnv],
 };

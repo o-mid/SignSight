@@ -9,3 +9,5 @@ Sepolia only (`eip155:11155111`). Use a test dApp that can pair over WalletConne
 5. Review shows `Approve USDT` and `Unlimited approval`.
 6. Tap Explain (mock). The summary must not hide the risk rows.
 7. Tap Reject. Open History and confirm the rejected row.
+8. From the dApp, send `eth_signTypedData_v4` Permit for the same USDT address. Review shows `Permit USDT`, name, verifying contract, chain, and primary type. Open Raw JSON. Reject. Dry-run must not return a signature.
+9. Optional: set `DEMO_SIGNER_KEY` in local `.env`, turn on Demo signer, and sign against local Anvil only. Do not add a mainnet key.
