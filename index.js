@@ -1,3 +1,4 @@
+// Compat has to load first. If it doesn't, WalletConnect and the RN crypto polyfills step on each other.
 import '@walletconnect/react-native-compat';
 import 'react-native-get-random-values';
 import 'fast-text-encoding';

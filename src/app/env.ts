@@ -1,3 +1,4 @@
+// Metro inlines these from local .env at bundle time. Jest leaves process.env alone.
 export function walletConnectProjectId(): string {
   return process.env.WALLETCONNECT_PROJECT_ID ?? '';
 }

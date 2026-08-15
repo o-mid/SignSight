@@ -29,6 +29,7 @@ export function userRejectedError(id: number): JsonRpcErrorResponse {
 }
 
 export function dryRunError(id: number): JsonRpcErrorResponse {
+  // Error object, no result. A fake hash or signature here would be worse than refusing.
   return {
     id,
     jsonrpc: '2.0',

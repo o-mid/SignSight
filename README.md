@@ -2,11 +2,13 @@
 
 ![SignSight](src/assets/banner.png)
 
-Portfolio demo wallet. See the request before you sign.
+See the request before you sign.
 
-React Native CLI (TypeScript). A dApp pairs over WalletConnect. This wallet shows a human summary of `eth_sendTransaction`, `personal_sign`, `eth_signTypedData_v4`, and `session_authenticate` (SIWE). It is not a custodial product. No mainnet funds. No seed phrase flow.
+This is a React Native CLI wallet I built as a portfolio demo. A test dApp pairs over WalletConnect. The app shows you what `eth_sendTransaction`, `personal_sign`, `eth_signTypedData_v4`, and SIWE (`session_authenticate`) actually say, then you reject or dry-run.
 
-## Architecture
+It is not a custodial product. There is no seed phrase screen and no mainnet. Dry-run is on by default. The dApp gets an error back, not a fake hash or signature.
+
+## How it fits together
 
 ```mermaid
 flowchart LR
@@ -22,6 +24,10 @@ flowchart LR
   Review -->|reject or dry-run error| WalletKit
 ```
 
+Decode and risk run on device. The explainer is optional copy. It never decides the buttons.
+
+More in [docs/architecture.md](docs/architecture.md). Screens and the request path are under [docs/arch/](docs/arch/screens.md). Simulator shots are in [docs/screenshots/](docs/screenshots/README.md). Shapes we persist are in [docs/schema/](docs/schema/README.md).
+
 ## Run
 
 ```
@@ -31,26 +37,28 @@ npx react-native run-ios
 npx react-native run-android
 ```
 
-Copy `.env.example` to `.env`:
+Copy `.env.example` to `.env` and put in a WalletConnect project id. Leave the explainer on mock unless you have a local HTTP endpoint.
 
 ```
 WALLETCONNECT_PROJECT_ID=
 EXPLAIN_PROVIDER=mock
 EXPLAIN_API_URL=
 EXPLAIN_API_KEY=
+DEMO_SIGNER_KEY=
+DEMO_SIGNER_RPC=http://127.0.0.1:8545
 ```
 
-Do not commit `.env`. Do not invent a project id.
+Don't commit `.env`. Don't invent a project id.
 
-Package: `com.signsight.app`. Scheme: `signsight://`.
+Package is `com.signsight.app`. Scheme is `signsight://`.
 
 ## Demo
 
-See [docs/demo.md](docs/demo.md). Pair, watch the session countdown, review an infinite USDT approve (symbol visible), Explain (mock), keep risk rows visible, Reject, check History.
+[docs/demo.md](docs/demo.md) is the path I'd walk a reviewer through. Pair, session countdown, infinite USDT approve, Explain without hiding the risk rows, Reject, then a Permit.
 
 ## Threats
 
-See [docs/threat-model.md](docs/threat-model.md). Dry-run never broadcasts and never returns a fake hash or SIWE signature. The explainer is copy only.
+[docs/threat-model.md](docs/threat-model.md). Short version: local rules do the judging. Dry-run never pretends a tx landed. A language-model sentence cannot clear a high-severity row.
 
 ## Tests
 
@@ -58,4 +66,4 @@ See [docs/threat-model.md](docs/threat-model.md). Dry-run never broadcasts and n
 npm test
 ```
 
-Covers six risk codes, USDT/WETH labels, SIWE happy and malformed paths, and the explainer post-filter.
+Risk codes, USDT/WETH labels, SIWE, typed-data fixtures, demo-signer signatures, and the explainer post-filter.

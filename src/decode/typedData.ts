@@ -23,6 +23,7 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
 }
 
 function payloadFromParams(params: unknown): unknown {
+  // WalletConnect puts the typed payload in params[1]. Sometimes it's already an object.
   if (!Array.isArray(params) || params.length < 2) {
     return undefined;
   }
@@ -73,6 +74,7 @@ function readBigInt(value: unknown): bigint | undefined {
 }
 
 function messageAmount(message: Record<string, unknown>): bigint | undefined {
+  // Permit uses value. Some Permit2-style payloads use allowed or amount.
   return readBigInt(message.value) ?? readBigInt(message.allowed) ?? readBigInt(message.amount);
 }
 

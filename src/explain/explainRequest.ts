@@ -15,6 +15,7 @@ export async function explainRequest(
 ): Promise<ExplainOutput> {
   const raw = await explainer(input);
   const summary = filterSummary(raw.summary, input.risks);
+  // Fail closed. Review buttons never read this string.
   if (summary === '') {
     return { summary: 'Could not explain' };
   }

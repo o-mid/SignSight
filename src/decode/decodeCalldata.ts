@@ -65,6 +65,7 @@ export function decodeErc20Calldata(
       };
     }
 
+    // Anything we don't list is undecoded. That's a risk, not a guess.
     return { kind: 'undecoded' };
   } catch {
     return { kind: 'undecoded' };

@@ -17,6 +17,7 @@ export const httpExplainer: Explainer = async (input) => {
   }
 
   const controller = new AbortController();
+  // 2.5s then we give up. A hung explainer shouldn't block the review sheet.
   const timer = setTimeout(() => controller.abort(), 2500);
   try {
     const response = await fetch(url, {

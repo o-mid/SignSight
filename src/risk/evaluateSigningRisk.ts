@@ -7,6 +7,7 @@ import type { RiskCode, RiskInput, RiskResult, RiskRow, RiskSeverity } from './t
 
 export const WALLET_CHAIN_ID = 'eip155:11155111';
 
+// Empty on purpose. Unknown spender is the default, not the exception.
 const SPENDER_ALLOWLIST: readonly string[] = [];
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -88,6 +89,7 @@ function evaluateTypedRisk(input: RiskInput): RiskResult {
 }
 
 export function evaluateSigningRisk(input: RiskInput): RiskResult {
+  // Typed data has no calldata. Don't flag a Permit as "could not decode" for that.
   if (input.method === 'eth_signTypedData_v4') {
     return evaluateTypedRisk(input);
   }
