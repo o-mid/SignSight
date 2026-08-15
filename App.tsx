@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RootStack from './src/navigation/RootStack';
-import { initWalletKit } from './src/wallet/walletKit';
+import { initWalletKit, getWalletKit } from './src/wallet/walletKit';
+import { listenSessionProposals } from './src/wallet/sessionActions';
 
 function App() {
   useEffect(() => {
@@ -9,7 +10,10 @@ function App() {
     if (projectId.length === 0) {
       return;
     }
-    void initWalletKit(projectId);
+    void initWalletKit(projectId).then(() => {
+      listenSessionProposals();
+      void getWalletKit();
+    });
   }, []);
 
   return (
