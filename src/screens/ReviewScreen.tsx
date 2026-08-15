@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 import { decodeErc20Calldata } from '../decode/decodeCalldata';
+import { reviewTitle } from '../decode/reviewLabel';
 import { evaluateSigningRisk } from '../risk/evaluateSigningRisk';
 import { hexToUtf8 } from '../wallet/personalSign';
 import { completeDryRun, rejectSessionRequest } from '../wallet/requestActions';
@@ -13,12 +14,15 @@ function asRecord(value: unknown): Record<string, unknown> | undefined {
   return value as Record<string, unknown>;
 }
 
-function txData(params: unknown): string | undefined {
+function txFields(params: unknown): { data?: string; to?: string } {
   if (!Array.isArray(params) || params.length === 0) {
-    return undefined;
+    return {};
   }
   const tx = asRecord(params[0]);
-  return typeof tx?.data === 'string' ? tx.data : undefined;
+  return {
+    data: typeof tx?.data === 'string' ? tx.data : undefined,
+    to: typeof tx?.to === 'string' ? tx.to : undefined,
+  };
 }
 
 function personalSignHex(params: unknown): string | undefined {
@@ -43,7 +47,8 @@ export default function ReviewScreen() {
 
   const request = snapshot.pendingRequest;
   const method = request?.method ?? '';
-  const data = request ? txData(request.params) : undefined;
+  const tx = request ? txFields(request.params) : {};
+  const data = tx.data;
   const signHex = request ? personalSignHex(request.params) : undefined;
   const decoded = decodeErc20Calldata(data);
   const utf8 = signHex ? hexToUtf8(signHex) : null;
@@ -56,12 +61,8 @@ export default function ReviewScreen() {
       }).rows
     : [];
 
-  let summary = 'Could not decode';
-  if (decoded.kind === 'transfer') {
-    summary = 'Transfer';
-  } else if (decoded.kind === 'approve') {
-    summary = 'Approve';
-  } else if (method === 'personal_sign' && utf8) {
+  let summary = reviewTitle({ kind: decoded.kind, tokenAddress: tx.to });
+  if (method === 'personal_sign' && utf8) {
     summary = utf8;
   }
 
